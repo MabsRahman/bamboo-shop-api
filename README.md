@@ -1,6 +1,6 @@
 # Bamboo Shop API
 
-> A modern e-commerce API built for **bamboo furniture** — designed to power a complete online shopping experience with speed, scalability, and simplicity.
+> A modern e-commerce API built for **bamboo furniture** - designed to power a complete online shopping experience with speed, scalability, and simplicity.
 
 ---
 
@@ -16,10 +16,10 @@ It handles everything from **user authentication** to **product management**, **
 - User registration & login  
 - Product catalog & categories  
 - Wishlist & cart  
-- Checkout & payments (bKash, SSLCommerz, MasterCard planned)  
+- Checkout & payments
 - Order tracking, returns & cancellations  
 - Email notifications & newsletter subscriptions  
-- AI-powered product suggestions *(future update)*  
+- AI-powered product suggestions
 
 ---
 
@@ -32,7 +32,7 @@ It handles everything from **user authentication** to **product management**, **
 
 ---
 
-## Setup (for developers)
+## Setup
 
 ```bash
 pnpm install
