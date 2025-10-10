@@ -17,3 +17,27 @@ model Test {
   id Int @id @default(autoincrement())
   name String
 }
+
+model User {
+  id         Int        @id @default(autoincrement())
+  email      String     @unique
+  password   String
+  name       String?
+  mobile     String?    @unique
+  addresses  Address[]
+  createdAt  DateTime   @default(now())
+}
+
+model Address {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  street      String
+  houseno     String
+  city        String
+  state       String?
+  postalCode  String?
+  country     String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
