@@ -6,6 +6,7 @@ import validator from 'validator';
 import { MailerService } from '../mailer/mailer.service';
 import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import { InvalidatedToken } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -202,15 +203,26 @@ export class AuthService {
     return { message: 'Password reset successful. You can now log in.' };
   }
 
-  async logout(userId: number) {
+  async logout(userId: number, accessToken: string) {
     try {
       await this.prisma.user.update({
         where: { id: userId },
         data: { refreshToken: null },
       });
+
+      const decoded: any = this.jwtService.decode(accessToken);
+      const expiry = new Date(decoded.exp * 1000);
+
+      await this.prisma.invalidatedToken.create({
+        data: {
+          token: accessToken,
+          expiresAt: expiry,
+        },
+      });
     } catch (err) {
       throw new BadRequestException('User not found');
     }
+
     return { message: 'Logged out successfully' };
   }
 

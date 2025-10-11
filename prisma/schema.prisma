@@ -34,6 +34,13 @@ model User {
   addresses          Address[]
 }
 
+model InvalidatedToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model Address {
   id          Int      @id @default(autoincrement())
   userId      Int

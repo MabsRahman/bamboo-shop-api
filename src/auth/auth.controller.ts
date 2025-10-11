@@ -2,7 +2,12 @@ import { Controller, Post, Body, Get, Query, Res, UnauthorizedException, UseGuar
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtPayload } from 'src/common/types/jwt-payload.interface';
 
+export interface RequestWithUser extends Request {
+  user: JwtPayload;
+}
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -108,9 +113,12 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response, @Body('userId') userId: string | number) {
-    const numericUserId = Number(userId);
-    await this.authService.logout(numericUserId);
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response) {
+    const userId = req.user['sub'];
+    const accessToken = req.headers['authorization']?.split(' ')[1];
+
+    await this.authService.logout(userId, accessToken);
 
     res.clearCookie('refresh_token', { 
       httpOnly: true,

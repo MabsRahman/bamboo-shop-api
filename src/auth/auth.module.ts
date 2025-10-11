@@ -7,6 +7,8 @@ import { MailerModule } from '../mailer/mailer.module';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { FacebookStrategy } from './strategies/facebook.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
 @Module({
   imports: [
     PrismaModule,
@@ -16,7 +18,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     MailerModule,
   ],
-  providers: [AuthService, GoogleStrategy, FacebookStrategy, JwtStrategy],
+  providers: [AuthService, GoogleStrategy, FacebookStrategy, JwtStrategy, JwtAuthGuard],
   controllers: [AuthController],
+  exports: [JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}
