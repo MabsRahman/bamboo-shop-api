@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from '../mailer/mailer.module';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { FacebookStrategy } from './strategies/facebook.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 @Module({
   imports: [
     PrismaModule,
@@ -15,7 +16,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
     }),
     MailerModule,
   ],
-  providers: [AuthService, GoogleStrategy, FacebookStrategy],
+  providers: [AuthService, GoogleStrategy, FacebookStrategy, JwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}
