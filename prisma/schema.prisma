@@ -19,13 +19,19 @@ model Test {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  email      String     @unique
-  password   String
-  name       String?
-  mobile     String?    @unique
-  addresses  Address[]
-  createdAt  DateTime   @default(now())
+  id                 Int      @id @default(autoincrement())
+  email              String   @unique
+  password           String
+  mobile             String?
+  name               String
+  isVerified         Boolean  @default(false)
+  verificationToken  String? @unique
+  resetPasswordToken String?
+  resetTokenExpiry   DateTime?
+  refreshToken       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  addresses          Address[]
 }
 
 model Address {

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Verify Your Email - Bamboo Shop</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #f6f9fc;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    h1 {
+      color: #2b7a0b;
+    }
+    a.button {
+      display: inline-block;
+      padding: 12px 20px;
+      background: #2b7a0b;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    a.button:hover {
+      background: #25660a;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Bamboo Shop, {{name}}!</h1>
+    <p>Thank you for signing up. Please confirm your email address by clicking the button below:</p>
+
+    <a class="button" href="{{verifyUrl}}" target="_blank">Verify Email</a>
+
+    <div class="footer">
+      <p>If you didn't create an account, please ignore this email.</p>
+      <p>— The Bamboo Shop Team</p>
+    </div>
+  </div>
+</body>
+</html>
