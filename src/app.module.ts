@@ -11,10 +11,13 @@ import { ProductService } from './product/product.service';
 import { ProductController } from './product/product.controller';
 import { ProductModule } from './product/product.module';
 import { DiscountModule } from './discount/discount.module';
+import { RatingService } from './rating/rating.service';
+import { RatingController } from './rating/rating.controller';
+import { RatingModule } from './rating/rating.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule],
-  controllers: [AppController, ProductController],
-  providers: [AppService, ProductService],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule],
+  controllers: [AppController, ProductController, RatingController],
+  providers: [AppService, ProductService, RatingService],
 })
 export class AppModule {}
