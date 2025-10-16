@@ -14,9 +14,10 @@ import { DiscountModule } from './discount/discount.module';
 import { RatingService } from './rating/rating.service';
 import { RatingController } from './rating/rating.controller';
 import { RatingModule } from './rating/rating.module';
+import { WishlistModule } from './wishlist/wishlist.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule],
   controllers: [AppController, ProductController, RatingController],
   providers: [AppService, ProductService, RatingService],
 })

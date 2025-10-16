@@ -33,6 +33,7 @@ model User {
   updatedAt          DateTime @updatedAt
   addresses          Address[]
   ratings            Rating[]
+  wishlists          Wishlist[]
 }
 
 model InvalidatedToken {
@@ -84,6 +85,7 @@ model Product {
   images      ProductImage[]
   tags        ProductTag[]
   ratings     Rating[]
+  wishlists   Wishlist[]
 }
 
 model Discount {
@@ -147,4 +149,16 @@ model Rating {
 
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
 }
