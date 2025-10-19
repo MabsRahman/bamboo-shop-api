@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Return Request Received - Bamboo Shop</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f9fc; color: #333; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #2b7a0b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #f3f3f3; }
+    a.button { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff; text-decoration: none; border-radius: 8px; margin-top: 20px; }
+    a.button:hover { background: #25660a; }
+    p { margin: 10px 0; }
+    .next-steps { background: #f3f3f3; padding: 15px; border-radius: 8px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello {{name}},</h2>
+    <p>We have received your return request for <strong>Order #{{returnRequest.orderId}}</strong>. Our team will review it and update you shortly.</p>
+
+    <h3>Return Items:</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each returnRequest.details}}
+        <tr>
+          <td>{{this.product.name}}</td>
+          <td>{{this.reason}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <p>Return Status: <strong>{{returnRequest.status}}</strong></p>
+
+    <div class="next-steps">
+      <h4>Next Steps:</h4>
+      <ul>
+        <li>Our team will review your return request within 3–5 business days.</li>
+        <li>You will receive an email update once your return is approved or rejected.</li>
+        <li>If approved, please follow the instructions to send the product back.</li>
+        <li>Once we receive and inspect the returned item(s), the refund will be processed to your original payment method.</li>
+      </ul>
+    </div>
+
+    <p>Thank you for shopping with Bamboo Shop!</p>
+    <p>Best regards,<br/>Bamboo Shop Team</p>
+  </div>
+</body>
+</html>

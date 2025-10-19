@@ -39,7 +39,8 @@ model User {
   coupons            Coupon[]
   couponLinks        CouponUser[]
 
-   orders            Order[]  
+  orders             Order[]  
+  Return             ReturnRequest[]
 }
 
 model InvalidatedToken {
@@ -97,6 +98,7 @@ model Product {
   couponLinks CouponProduct[]
 
   orderItems  OrderItem[]
+  Retuen      ReturnRequestDetail[]
 }
 
 model Discount {
@@ -229,6 +231,8 @@ model Order {
   coupon        Coupon?       @relation(fields: [couponId], references: [id])
   items         OrderItem[]
   Payment       PaymentTransaction[]
+
+  Return        ReturnRequest[]
 }
 
 enum PaymentMethod {
@@ -262,4 +266,46 @@ model PaymentTransaction {
   createdAt DateTime @default(now())
 
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model ReturnRequest {
+  id           Int           @id @default(autoincrement())
+  orderId      Int
+  userId       Int
+  status       ReturnStatus  @default(PENDING)
+  refundAmount Float?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  order        Order         @relation(fields: [orderId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  details      ReturnRequestDetail[]
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+model ReturnRequestDetail {
+  id              Int      @id @default(autoincrement())
+  returnRequestId Int
+  productId       Int
+  reason          String
+  createdAt       DateTime @default(now())
+
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id])
+  product         Product       @relation(fields: [productId], references: [id])
+  images          ReturnRequestDetailImage[]
+}
+
+model ReturnRequestDetailImage {
+  id                  Int                 @id @default(autoincrement())
+  returnRequestDetailId Int
+  url                 String
+  createdAt           DateTime            @default(now())
+
+  returnRequestDetail ReturnRequestDetail @relation(fields: [returnRequestDetailId], references: [id], onDelete: Cascade)
 }

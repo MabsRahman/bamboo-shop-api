@@ -60,6 +60,18 @@ export class MailerService {
       subject: `Your Bamboo Shop Order #${order.id} Confirmation`,
       html,
     });
-}
+  }
+
+  async sendReturnRequestReceivedEmail(email: string, name: string, returnRequest: any) {
+    const appUrl = process.env.APP_URL;
+    const html = await this.compileTemplate('return-request-received', { name, returnRequest, appUrl });
+
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: 'Return Request Received',
+      html,
+    });
+  }
 
 }

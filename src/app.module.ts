@@ -20,10 +20,12 @@ import { OrderModule } from './order/order.module';
 import { PaymentService } from './payment/payment.service';
 import { PaymentController } from './payment/payment.controller';
 import { PaymentModule } from './payment/payment.module';
+import { ReturnService } from './return/return.service';
+import { ReturnModule } from './return/return.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule],
   controllers: [AppController, ProductController, RatingController, PaymentController],
-  providers: [AppService, ProductService, RatingService, PaymentService],
+  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService],
 })
 export class AppModule {}
