@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Order Confirmation - Bamboo Shop</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f9fc; color: #333; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #2b7a0b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #f3f3f3; }
+    a.button { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff; text-decoration: none; border-radius: 8px; margin-top: 20px; }
+    a.button:hover { background: #25660a; }
+    p { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello {{name}},</h2>
+    <p>Thank you for your order! Your order has been successfully placed.</p>
+
+    <h3>Order Details:</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Price (BDT)</th>
+          <th>Subtotal (BDT)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each order.items}}
+        <tr>
+          <td>{{this.product.name}}</td>
+          <td>{{this.quantity}}</td>
+          <td>BDT {{this.price}}</td>
+          <td>BDT {{this.subtotal}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <p><strong>Total Amount:</strong> BDT {{order.totalAmount}}</p>
+    <p><strong>Discount:</strong> BDT {{order.discountTotal}}</p>
+    <p><strong>Payment Method:</strong> {{order.paymentMethod}}</p>
+
+    <p>We will process your order shortly and notify you once it has been shipped. You will also receive updates about the delivery status so you can track your package every step of the way.</p>
+
+    <p>View your order: <a class="button" href="{{appUrl}}/orders/my" target="_blank">Click here</a></p>
+
+    <p>Thank you for shopping with Bamboo Shop!</p>
+    <p>Best regards,<br/>Bamboo Shop Team</p>
+  </div>
+</body>
+</html>

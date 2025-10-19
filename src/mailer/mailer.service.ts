@@ -51,4 +51,15 @@ export class MailerService {
     });
   }
 
+  async sendOrderConfirmationEmail(email: string, name: string, order: any) {
+    const appUrl = process.env.APP_URL;
+    const html = await this.compileTemplate('order-confirmation', { name, order, appUrl });
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: `Your Bamboo Shop Order #${order.id} Confirmation`,
+      html,
+    });
+}
+
 }
