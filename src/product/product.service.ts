@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -217,5 +217,29 @@ export class ProductService {
 
     await this.prisma.product.delete({ where: { id } });
     return { message: 'Product deleted successfully' };
+  }
+
+  async subscribeBackInStock(userId: number, productId: number) {
+    const exists = await this.prisma.stockSubscription.findFirst({
+      where: { userId, productId },
+    });
+    if (exists) throw new BadRequestException('Already subscribed for this product');
+
+    const subscription = await this.prisma.stockSubscription.create({
+      data: { userId, productId },
+    });
+
+    return { message: 'Subscribed to back-in-stock notifications', subscription };
+  }
+
+  async unsubscribeBackInStock(userId: number, productId: number) {
+    const deleted = await this.prisma.stockSubscription.deleteMany({
+      where: { userId, productId },
+    });
+
+    if (deleted.count === 0)
+      throw new BadRequestException('No subscription found for this product');
+
+    return { message: 'Unsubscribed from back-in-stock notifications' };
   }
 }

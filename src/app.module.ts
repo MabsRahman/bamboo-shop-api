@@ -22,9 +22,10 @@ import { PaymentController } from './payment/payment.controller';
 import { PaymentModule } from './payment/payment.module';
 import { ReturnService } from './return/return.service';
 import { ReturnModule } from './return/return.module';
-
+import { ScheduleModule } from '@nestjs/schedule';
+import { CartReminderModule } from './cart-reminder/cart-reminder.module';
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule],
   controllers: [AppController, ProductController, RatingController, PaymentController],
   providers: [AppService, ProductService, RatingService, PaymentService, ReturnService],
 })

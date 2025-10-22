@@ -41,6 +41,11 @@ model User {
 
   orders             Order[]  
   Return             ReturnRequest[]
+
+  isSubscribed       Boolean @default(false)
+
+  StockSubscription  StockSubscription[]
+
 }
 
 model InvalidatedToken {
@@ -99,6 +104,8 @@ model Product {
 
   orderItems  OrderItem[]
   Retuen      ReturnRequestDetail[]
+
+  StockSubscription  StockSubscription[]
 }
 
 model Discount {
@@ -309,3 +316,14 @@ model ReturnRequestDetailImage {
 
   returnRequestDetail ReturnRequestDetail @relation(fields: [returnRequestDetailId], references: [id], onDelete: Cascade)
 }
+
+model StockSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+}
+

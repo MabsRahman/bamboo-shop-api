@@ -1,7 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import type { Request } from 'express';
+import { JwtPayload } from 'src/common/types/jwt-payload.interface';
+interface AuthRequest extends Request {
+  user: JwtPayload;
+}
 
 @Controller('products')
 export class ProductController {
@@ -49,4 +55,17 @@ export class ProductController {
   remove(@Param('id') id: string) {
     return this.productService.remove(Number(id));
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/subscribe-stock')
+  async subscribeStock(@Req() req: AuthRequest, @Param('id') productId: string) {
+    return this.productService.subscribeBackInStock(req.user.sub, Number(productId));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/unsubscribe-stock')
+  async unsubscribeStock(@Req() req: AuthRequest, @Param('id') productId: string) {
+    return this.productService.unsubscribeBackInStock(req.user.sub, Number(productId));
+  }
+
 }

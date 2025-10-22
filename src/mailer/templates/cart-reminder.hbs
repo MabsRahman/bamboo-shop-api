@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart Reminder - Bamboo Shop</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f9fc;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      color: #2b7a0b;
+    }
+    p {
+      margin: 10px 0;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    a.button {
+      display: inline-block;
+      padding: 12px 20px;
+      background: #2b7a0b;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    a.button:hover {
+      background: #25660a;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+        margin: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello {{name}},</h2>
+    <p>You left some items in your cart! Don't miss out-complete your purchase before they are gone.</p>
+
+    <ul>
+      {{#each cart.items}}
+        <li>
+          <strong>{{this.product.name}}</strong> - Quantity: {{this.quantity}}
+        </li>
+      {{/each}}
+    </ul>
+
+    <p>Hurry! Complete your order before your items go out of stock.</p>
+
+    <p>
+      <a class="button" href="{{appUrl}}/cart" target="_blank">Go to Cart</a>
+    </p>
+
+    <p>Thank you for shopping with Bamboo Shop!</p>
+    <p>Best regards,<br/>Bamboo Shop Team</p>
+  </div>
+</body>
+</html>

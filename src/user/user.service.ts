@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -71,4 +71,16 @@ export class UserService {
 
     return { statusCode: 200, message: 'Password changed successfully' };
   }
+
+   async updateSubscription(userId: number, isSubscribed: boolean) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { isSubscribed },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return { message: `User ${isSubscribed ? 'subscribed' : 'unsubscribed'} successfully` };
+  }
+
 }

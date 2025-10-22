@@ -74,4 +74,20 @@ export class MailerService {
     });
   }
 
+  async sendCartReminderEmail(name: string, email: string, carts: any[]) {
+    const appUrl = process.env.APP_URL;
+    const html = await this.compileTemplate('cart-reminder', {
+      name,
+      cart: { items: carts },
+      appUrl,
+    });
+
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: 'Your cart is waiting for you!',
+      html,
+    });
+  }
+
 }
