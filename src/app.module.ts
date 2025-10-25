@@ -24,9 +24,14 @@ import { ReturnService } from './return/return.service';
 import { ReturnModule } from './return/return.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CartReminderModule } from './cart-reminder/cart-reminder.module';
+import { ContactModule } from './contact/contact.module';
+import { BlogController } from './blog/blog.controller';
+import { BlogService } from './blog/blog.service';
+import { BlogModule } from './blog/blog.module';
+import { VisitorModule } from './visitor/visitor.module';
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule],
-  controllers: [AppController, ProductController, RatingController, PaymentController],
-  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule, ContactModule, BlogModule, VisitorModule],
+  controllers: [AppController, ProductController, RatingController, PaymentController, BlogController],
+  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService, BlogService],
 })
 export class AppModule {}
