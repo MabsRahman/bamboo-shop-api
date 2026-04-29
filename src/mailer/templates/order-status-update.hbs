@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f9fc; color: #333; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .status-banner { background: #e8f5e9; border-left: 5px solid #2b7a0b; padding: 15px; margin: 20px 0; font-size: 18px; }
+    .status-text { font-weight: bold; color: #2b7a0b; text-transform: uppercase; }
+    .button { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff; text-decoration: none; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 style="color: #2b7a0b;">Great News, {{name}}!</h2>
+    <p>Your order <strong>#{{orderId}}</strong> status has been updated.</p>
+
+    <div class="status-banner">
+      Current Status: <span class="status-text">{{status}}</span>
+    </div>
+
+    {{#if (eq status "shipped")}}
+      <p>Your package is on its way! You'll be enjoying your bamboo products very soon.</p>
+    {{else if (eq status "delivered")}}
+      <p>Your order has been delivered. We hope you love your new items!</p>
+    {{else if (eq status "cancelled")}}
+      <p>Your order has been cancelled. If you didn't request this, please contact support.</p>
+    {{else}}
+      <p>We are currently processing your order. Thank you for your patience!</p>
+    {{/if}}
+
+    <br>
+    <a href="{{appUrl}}/profile/orders" class="button">Track My Order</a>
+    
+    <p style="margin-top: 30px;">Best regards,<br/>Bamboo Shop Team</p>
+  </div>
+</body>
+</html>

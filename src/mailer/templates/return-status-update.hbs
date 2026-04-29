@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Return Request Update - Bamboo Shop</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f9fc; color: #333; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #2b7a0b; }
+    .status-banner { 
+      background: #e8f5e9; 
+      border-left: 5px solid #2b7a0b; 
+      padding: 15px; 
+      margin: 20px 0; 
+      font-size: 18px;
+    }
+    .status-text { font-weight: bold; color: #2b7a0b; text-transform: uppercase; }
+    a.button { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff !important; text-decoration: none; border-radius: 8px; margin-top: 20px; }
+    a.button:hover { background: #25660a; }
+    p { margin: 10px 0; }
+    .footer { font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello {{name}},</h2>
+    <p>The status of your return request for <strong>Order #{{returnId}}</strong> has been updated.</p>
+
+    <div class="status-banner">
+      Current Status: <span class="status-text">{{status}}</span>
+    </div>
+
+    {{#if (eq status "APPROVED")}}
+    <p>Great news! Your return has been <strong>approved</strong>. Please follow the instructions in your dashboard to ship the items back to us.</p>
+    {{else if (eq status "REJECTED")}}
+    <p>Your return request has been <strong>declined</strong>. If you believe this is a mistake, please reply to this email or contact our support team.</p>
+    {{else}}
+    <p>Your return request is currently being processed. Status: <strong>{{status}}</strong>.</p>
+    {{/if}}
+
+    <a href="{{appUrl}}/profile/returns" class="button">View My Returns</a>
+
+    <p style="margin-top: 30px;">Thank you for shopping with Bamboo Shop!</p>
+    <p>Best regards,<br/>Bamboo Shop Team</p>
+    
+    <div class="footer">
+      <p>&copy; 2026 Bamboo Shop. This is an automated notification.</p>
+    </div>
+  </div>
+</body>
+</html>

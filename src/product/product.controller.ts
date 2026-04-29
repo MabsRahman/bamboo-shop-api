@@ -5,6 +5,8 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { Request } from 'express';
 import { JwtPayload } from 'src/common/types/jwt-payload.interface';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/guards/roles.decorator';
 interface AuthRequest extends Request {
   user: JwtPayload;
 }
@@ -13,6 +15,8 @@ interface AuthRequest extends Request {
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
   @Post()
   create(@Body() dto: CreateProductDto) {
     return this.productService.create(dto);
@@ -46,11 +50,15 @@ export class ProductController {
     return this.productService.findOne(Number(id));
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productService.update(Number(id), dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productService.remove(Number(id));

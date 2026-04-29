@@ -16,6 +16,8 @@ export class MailerService {
         pass: process.env.MAIL_PASS,
       },
     });
+
+    handlebars.registerHelper('eq', (a, b) => a === b);
   }
 
   private async compileTemplate(templateName: string, data: any) {
@@ -86,6 +88,40 @@ export class MailerService {
       from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
       to: email,
       subject: 'Your cart is waiting for you!',
+      html,
+    });
+  }
+
+  async sendOrderStatusUpdateEmail(email: string, name: string, status: string, orderId: number) {
+    const appUrl = process.env.APP_URL;
+    const html = await this.compileTemplate('order-status-update', { 
+      name, 
+      status, 
+      orderId, 
+      appUrl 
+    });
+
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: `Update on your Bamboo Shop Order #${orderId}`,
+      html,
+    });
+  }
+
+  async sendReturnStatusUpdateEmail(email: string, name: string, status: string, returnId: number) {
+    const appUrl = process.env.APP_URL;
+    const html = await this.compileTemplate('return-status-update', { 
+      name, 
+      status, 
+      returnId, 
+      appUrl 
+    });
+
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: `Update on your Return Request #${returnId}`,
       html,
     });
   }

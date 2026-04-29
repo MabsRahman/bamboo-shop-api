@@ -4,6 +4,8 @@ import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayload } from 'src/common/types/jwt-payload.interface';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './guards/roles.decorator';
 
 export interface RequestWithUser extends Request {
   user: JwtPayload;
@@ -127,6 +129,26 @@ export class AuthController {
     });
 
     return { message: 'Logged out successfully' };
+  }
+
+  @Post('admin/login')
+    async adminLogin(
+      @Body('email') email: string, 
+      @Body('password') password: string
+    ) {
+      return this.authService.adminLogin(email, password);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1)
+  @Post('admin/register')
+  async registerAdmin(
+    @Body('email') email: string,
+    @Body('password') password: string,
+    @Body('name') name: string,
+    @Body('role') role: number,
+  ) {
+    return this.authService.registerAdmin(name, email, password, role);
   }
   
 }

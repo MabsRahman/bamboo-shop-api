@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailerService } from '../mailer/mailer.service';
+import { ReturnStatus } from '@prisma/client';
 
 interface ReturnItemDto {
   productId: number;
@@ -86,4 +87,61 @@ export class ReturnService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getAllReturnsForAdmin(status?: string, page = 1, limit = 10, orderId?: number) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (status) where.status = status;
+    if (orderId) where.orderId = orderId;
+
+    return this.prisma.returnRequest.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true, email: true, mobile: true } },
+        order: true,
+        details: { include: { product: true, images: true } },
+      },
+    });
+  }
+
+  async updateReturnStatus(id: number, status: string) {
+    const returnRequest = await this.prisma.returnRequest.findUnique({
+      where: { id },
+      include: { details: true, user: true }
+    });
+
+    if (!returnRequest) throw new BadRequestException('Return not found');
+
+    const updated = await this.prisma.returnRequest.update({
+      where: { id },
+      data: { status: status as ReturnStatus },
+    });
+
+    if (status === 'RECEIVED') {
+      for (const item of returnRequest.details) {
+        await this.prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: 1 } },
+        });
+      }
+    }
+
+    await this.mailerService.sendReturnStatusUpdateEmail(
+      returnRequest.user.email,
+      returnRequest.user.name,
+      status,
+      id
+    );
+
+    return updated;
+  }
+
+  async deleteReturn(id: number) {
+    return this.prisma.returnRequest.delete({ where: { id } });
+  }
+
 }

@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, Req, UseGuards, ParseIntPipe, UnauthorizedException } from '@nestjs/common';
 import { RatingService } from './rating.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtPayload } from 'src/common/types/jwt-payload.interface';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/guards/roles.decorator';
 
 interface AuthRequest extends Request {
   user: JwtPayload;
@@ -45,6 +47,40 @@ export class RatingController {
     const userId = req.user?.sub;
     if (!userId) throw new UnauthorizedException();
     return this.ratingService.remove(Number(id), userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
+  @Get('admin/all')
+  async findAllAdmin(
+    @Query('status') status?: string,
+    @Query('productId') productId?: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.ratingService.findAllAdmin(
+      status,
+      productId ? Number(productId) : undefined,
+      Number(page),
+      Number(limit),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
+  @Patch('admin/:id/status')
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: string,
+  ) {
+    return this.ratingService.updateStatus(id, status);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
+  @Delete('admin/:id')
+  async adminRemove(@Param('id', ParseIntPipe) id: number) {
+    return this.ratingService.adminRemove(id);
   }
   
 }

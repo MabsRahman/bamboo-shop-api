@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Coupon, PaymentMethod } from '@prisma/client';
@@ -181,5 +181,164 @@ export class OrderService {
     });
   }
 
+  async getAllOrdersForAdmin(
+    page = 1,
+    limit = 10,
+    status?: string,
+    paymentMethod?: string,
+    fromDate?: string,
+    toDate?: string,
+    userId?: number,
+    search?: string,
+  ) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (status) where.status = status;
+    if (paymentMethod) where.paymentMethod = paymentMethod;
+    if (userId) where.userId = userId;
+
+    if (search) {
+      where.user = {
+        OR: [
+          { name: { contains: search } },
+          { email: { contains: search } },
+        ],
+      };
+    }
+
+    if (fromDate || toDate) {
+      where.createdAt = {};
+      if (fromDate) where.createdAt.gte = new Date(fromDate);
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    return this.prisma.order.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { 
+          select: { 
+            name: true, 
+            email: true,
+            mobile: true,
+            addresses: {
+              where: { isDefault: true },
+              take: 1
+            }
+          } 
+        },
+        items: { 
+          include: { 
+            product: {
+              select: { name: true, price: true, images: { take: 1 } }
+            } 
+          } 
+        },
+        Payment: true
+      }
+    });
+  }
+
+  async getOrderDetailForAdmin(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: { 
+          select: { 
+            name: true, 
+            email: true,
+            mobile: true,
+            addresses: {
+              where: { isDefault: true },
+              take: 1
+            }
+          } 
+        },
+        items: { 
+          include: { 
+            product: {
+              select: { name: true, price: true, images: { take: 1 } }
+            } 
+          } 
+        },
+        Payment: true
+      }
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+  
+  async updateOrderStatus(orderId: number, status: string) {
+    const order = await this.prisma.order.findUnique({ 
+      where: { id: orderId },
+      include: { items: true, user: true }
+    });
+    
+    if (!order) throw new NotFoundException('Order not found');
+
+    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.order.update({
+        where: { id: orderId },
+        data: { status },
+      });
+
+      if (status === 'cancelled' && order.status !== 'cancelled') {
+        for (const item of order.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+        await tx.paymentTransaction.updateMany({
+          where: { orderId },
+          data: { status: 'failed' }
+        });
+      }
+
+      return updated;
+    });
+
+    try {
+      await this.mailerService.sendOrderStatusUpdateEmail(
+        order.user.email,
+        order.user.name,
+        status,
+        orderId
+      );
+    } catch (error) {
+      console.error('Email failed to send, but order was updated:', error);
+    }
+
+    return updatedOrder;
+  }
+
+  async deleteOrder(id: number) {
+    const order = await this.prisma.order.findUnique({ 
+      where: { id },
+      include: { items: true }
+    });
+    
+    if (!order) throw new NotFoundException('Order not found');
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of order.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
+      await tx.order.delete({ where: { id } });
+    });
+
+    return { message: 'Order deleted and stock restored successfully' };
+  }
 
 }

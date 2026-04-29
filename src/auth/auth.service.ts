@@ -226,4 +226,72 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
+
+  async adminLogin(email: string, password: string) {
+    if (!email || !password) {
+      throw new BadRequestException('Email and password are required');
+    }
+
+    const admin = await this.prisma.admin.findUnique({
+      where: { email },
+      select: { id: true, email: true, password: true, role: true, active: true },
+    });
+
+    if (!admin || !(await bcrypt.compare(password, admin.password))) {
+      this.logger.warn(`Failed admin login attempt for email: ${email}`);
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (!admin.active) {
+      throw new UnauthorizedException('Your account is deactivated. Please contact the SuperAdmin.');
+    }
+
+    const payload = { 
+      sub: admin.id, 
+      email: admin.email, 
+      role: admin.role,
+      isAdmin: true 
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload, { expiresIn: '8h' }), 
+      admin: {
+        id: admin.id,
+        name: admin.email,
+        role: admin.role
+      }
+    };
+  }
+
+  async registerAdmin(name: string, email: string, password: string, role: number) {
+    const existingAdmin = await this.prisma.admin.findUnique({
+      where: { email },
+    });
+
+    if (existingAdmin) {
+      throw new BadRequestException('Admin with this email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newAdmin = await this.prisma.admin.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: role || 2,
+        active: true,
+      },
+    });
+
+    return {
+      message: 'New admin created successfully',
+      admin: {
+        id: newAdmin.id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        role: newAdmin.role,
+      },
+    };
+  }
+
 }

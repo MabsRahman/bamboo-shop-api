@@ -83,4 +83,93 @@ export class UserService {
     return { message: `User ${isSubscribed ? 'subscribed' : 'unsubscribed'} successfully` };
   }
 
+  async findAllAdmin(search?: string, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const where = search ? {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { mobile: { contains: search, mode: 'insensitive' } },
+      ],
+    } : {};
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          mobile: true,
+          createdAt: true,
+          _count: { select: { orders: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      users,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
+  async getUserFullDetails(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        addresses: true,
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        ratings: {
+          include: { 
+            product: { 
+              select: { name: true } 
+            } 
+          }
+        },
+        _count: {
+          select: { 
+            orders: true,
+            ratings: true
+          }
+        }
+      }
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const { password, ...details } = user;
+    return details;
+  }
+
+  async removeUser(adminId: number, targetId: number) {
+    if (adminId === targetId) {
+      throw new BadRequestException('You cannot delete your own admin account');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: targetId },
+      include: { _count: { select: { orders: true } } }
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user._count.orders > 0) {
+      throw new BadRequestException(
+        'Cannot delete user with existing orders. Please deactivate them instead for record keeping.'
+      );
+    }
+
+    return this.prisma.user.delete({ where: { id: targetId } });
+  }
+
 }
