@@ -35,9 +35,12 @@ import { CouponModule } from './coupon/coupon.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { NewsletterController } from './newsletter/newsletter.controller';
 import { NewsletterService } from './newsletter/newsletter.service';
+import { DashboardController } from './dashboard/dashboard.controller';
+import { DashboardService } from './dashboard/dashboard.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule, ContactModule, BlogModule, VisitorModule, CouponModule, NewsletterModule],
-  controllers: [AppController, ProductController, RatingController, PaymentController, BlogController, CouponController, NewsletterController],
-  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService, BlogService, CouponService, NewsletterService],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule, ContactModule, BlogModule, VisitorModule, CouponModule, NewsletterModule, DashboardModule],
+  controllers: [AppController, ProductController, RatingController, PaymentController, BlogController, CouponController, NewsletterController, DashboardController],
+  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService, BlogService, CouponService, NewsletterService, DashboardService],
 })
 export class AppModule {}
