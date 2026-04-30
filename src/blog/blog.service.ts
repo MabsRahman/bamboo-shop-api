@@ -31,4 +31,11 @@ export class BlogService {
     if (!blog.isPublished) throw new NotFoundException('Blog post not published yet');
     return blog;
   }
+
+  async remove(id: number) {
+    const blog = await this.prisma.blogPost.findUnique({ where: { id } });
+    if (!blog) throw new NotFoundException('Blog post not found');
+    await this.prisma.blogPost.delete({ where: { id } });
+    return { message: 'Blog post deleted successfully' };
+  }
 }

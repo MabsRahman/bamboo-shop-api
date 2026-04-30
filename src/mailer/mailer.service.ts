@@ -126,4 +126,63 @@ export class MailerService {
     });
   }
 
+  async sendContactReplyEmail(email: string, name: string, subject: string, originalMessage: string, replyContent: string) {
+    const html = await this.compileTemplate('contact-reply', { 
+      name, 
+      subject, 
+      originalMessage, 
+      replyContent 
+    });
+
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop Support" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: `Re: ${subject}`,
+      html,
+    });
+  }
+
+  async sendCouponGiftEmail(
+    email: string, 
+    name: string, 
+    couponCode: string, 
+    value: number, 
+    type: string, 
+    message: string
+  ) {
+    const appUrl = process.env.APP_URL;
+    const discountText = type === 'percentage' ? `${value}%` : `${value} BDT`;
+    
+    const html = await this.compileTemplate('coupon-gift', { 
+      name, 
+      couponCode, 
+      discountText, 
+      message,
+      appUrl 
+    });
+
+    await this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: 'A Special Gift for You! 🎁',
+      html,
+    });
+  }
+
+  async sendBulkNotification(email: string, name: string, subject: string, message: string) {
+    const html = await this.compileTemplate('bulk-announcement', {
+      name,
+      message,
+      email,
+      appUrl: process.env.APP_URL,
+    });
+
+    return this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: subject,
+      html,
+    });
+  }
+
 }

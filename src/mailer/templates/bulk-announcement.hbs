@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .header { background-color: #2b7a0b; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 24px; }
+        .content { padding: 30px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px; }
+        .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #888; }
+        .btn { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff !important; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Bamboo Shop</h1>
+        </div>
+        <div class="content">
+            <h2>Hello {{name}},</h2>
+            <p>{{message}}</p>
+            <center>
+                <a href="{{appUrl}}" class="btn">Visit Our Shop</a>
+            </center>
+        </div>
+        <div class="footer">
+            <p>You received this because you are subscribed to Bamboo Shop updates.</p>
+            <p><a href="{{appUrl}}/newsletter/unsubscribe?email={{email}}">Unsubscribe</a></p>
+        </div>
+    </div>
+</body>
+</html>

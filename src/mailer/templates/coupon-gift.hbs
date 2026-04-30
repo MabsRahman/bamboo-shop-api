@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Special Gift - Bamboo Shop</title>
+  <style>
+    body { 
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+      background-color: #f6f9fc; 
+      color: #333; 
+      margin: 0; 
+      padding: 0; 
+    }
+    .container { 
+      max-width: 600px; 
+      margin: 40px auto; 
+      background: #ffffff; 
+      padding: 40px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+      text-align: center; 
+    }
+    .gift-icon { 
+      font-size: 60px; 
+      margin-bottom: 20px; 
+    }
+    h2 { 
+      color: #2b7a0b; 
+      margin-bottom: 15px; 
+      font-size: 24px;
+    }
+    .message-text { 
+      line-height: 1.6; 
+      color: #555; 
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+    .coupon-box { 
+      background-color: #f0fdf4; 
+      border: 2px dashed #2b7a0b; 
+      padding: 30px; 
+      margin: 20px 0; 
+      border-radius: 8px;
+    }
+    .code { 
+      font-size: 32px; 
+      font-weight: bold; 
+      color: #2b7a0b; 
+      letter-spacing: 3px; 
+      text-transform: uppercase;
+    }
+    .value { 
+      font-size: 18px; 
+      color: #444; 
+      margin-top: 10px; 
+    }
+    .btn { 
+      display: inline-block; 
+      padding: 15px 35px; 
+      background-color: #2b7a0b; 
+      color: #ffffff !important; 
+      text-decoration: none; 
+      border-radius: 8px; 
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 25px;
+      transition: background-color 0.3s ease;
+    }
+    .instruction {
+      font-size: 14px;
+      color: #888;
+      margin-top: 15px;
+    }
+    .footer { 
+      margin-top: 40px; 
+      font-size: 13px; 
+      color: #999; 
+      border-top: 1px solid #eeeeee; 
+      padding-top: 25px; 
+    }
+    .footer strong {
+      color: #2b7a0b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="gift-icon">🎁</div>
+    
+    <h2>Hello {{name}},</h2>
+    
+    <!-- Dynamic message based on Option 2 -->
+    <p class="message-text">
+      {{message}}
+    </p>
+
+    <div class="coupon-box">
+      <div class="code">{{couponCode}}</div>
+      <div class="value">Enjoy <strong>{{discountText}} Off</strong> your next purchase</div>
+    </div>
+
+    <p class="instruction">Simply enter the code above during checkout.</p>
+    
+    <a href="{{appUrl}}" class="btn">Shop Now</a>
+
+    <div class="footer">
+      <p>Happy Shopping,<br/><strong>The Bamboo Shop Team</strong></p>
+      <p>If you have any questions, feel free to reply to this email or visit our support center.</p>
+    </div>
+  </div>
+</body>
+</html>

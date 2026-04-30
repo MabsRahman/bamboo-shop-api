@@ -330,15 +330,17 @@ model StockSubscription {
 }
 
 model ContactMessage {
-  id        Int      @id @default(autoincrement())
-  userId    Int?
-  name      String
-  email     String
-  subject   String
-  message   String
-  createdAt DateTime @default(now())
-
-  user      User?    @relation(fields: [userId], references: [id])
+  id           Int      @id @default(autoincrement())
+  userId       Int?
+  name         String
+  email        String
+  subject      String
+  message      String
+  
+  isReplied    Boolean  @default(false)
+  replyMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id])
 }
 
 model BlogPost {
@@ -374,4 +376,13 @@ model Admin {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model NewsletterCampaign {
+  id        Int      @id @default(autoincrement())
+  subject   String
+  message   String   @db.Text
+  sentAt    DateTime @default(now())
+  totalSent Int      @default(0)
+  status    String   @default("COMPLETED")
 }

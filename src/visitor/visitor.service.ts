@@ -25,10 +25,48 @@ export class VisitorService {
     return this.prisma.visitorLog.count();
   }
 
-  async getVisits(filter?: { country?: string; path?: string }) {
-    return this.prisma.visitorLog.findMany({
-      where: filter || {},
-      orderBy: { createdAt: 'desc' },
-    });
+  async getVisits(query: { 
+    search?: string; 
+    city?: string; 
+    country?: string; 
+    path?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const { search, city, country, path, page = 1, limit = 50 } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const where = {
+      ...(city && { city: { contains: city } }),
+      ...(country && { country }),
+      ...(path && { path: { contains: path } }),
+      ...(search && {
+        OR: [
+          { ip: { contains: search } },
+          { path: { contains: search } },
+          { userAgent: { contains: search } },
+        ],
+      }),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.visitorLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Number(limit),
+      }),
+      this.prisma.visitorLog.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: Number(page),
+        lastPage: Math.ceil(total / Number(limit)),
+        limit: Number(limit)
+      },
+    };
   }
 }
