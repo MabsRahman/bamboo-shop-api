@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f9fc; color: #333; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #2b7a0b; }
+    .status-badge { background: #e8f5e9; color: #2b7a0b; padding: 10px; border-radius: 5px; font-weight: bold; display: inline-block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #f3f3f3; }
+    .button { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff; text-decoration: none; border-radius: 8px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Great news, {{name}}!</h2>
+    <p>Your order <strong>#{{order.id}}</strong> has been shipped and is on its way to you.</p>
+    
+    <div class="status-badge">Status: SHIPPED</div>
+
+    <p>We have attached your official invoice (PDF) to this email for your records.</p>
+
+    <h3>Items in this shipment:</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each order.items}}
+        <tr>
+          <td>{{this.product.name}}</td>
+          <td>{{this.quantity}}</td>
+          <td>TK {{this.price}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <p><strong>Grand Total:</strong> TK {{order.totalAmount}}</p>
+
+    <a href="{{appUrl}}/orders/my" class="button">Track Shipment</a>
+
+    <p style="margin-top: 30px;">Thank you for shopping with us!<br/><strong>Bamboo Shop Team</strong></p>
+  </div>
+</body>
+</html>

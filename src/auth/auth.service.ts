@@ -96,7 +96,7 @@ export class AuthService {
       throw new UnauthorizedException('Please verify your email before logging in.');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: 0 };
     const access_token = this.jwtService.sign(payload, { expiresIn: '1h' });
 
     let refresh_token: string | null = null;

@@ -185,4 +185,33 @@ export class MailerService {
     });
   }
 
+  async sendInvoiceEmail(email: string, name: string, order: any, pdfBuffer: Buffer) {
+    try {
+      const appUrl = process.env.APP_URL;
+
+      const html = await this.compileTemplate('shipping-confirmation', { 
+        name, 
+        order, 
+        appUrl 
+      });
+
+      await this.transporter.sendMail({
+        from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+        to: email,
+        subject: `Order Shipped! Invoice for #${order.id}`,
+        html,
+        attachments: [
+          {
+            filename: `Invoice_${order.id}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ],
+      });
+      
+      console.log(`Shipping email with invoice sent to ${email}`);
+    } catch (error) {
+      console.error('Failed to send invoice email:', error);
+    }
+  }
 }

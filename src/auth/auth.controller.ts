@@ -117,7 +117,8 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response) {
-    const userId = req.user['sub'];
+    const userId = req.user['id'];
+    console.log('Logging out user with ID:', userId);
     const accessToken = req.headers['authorization']?.split(' ')[1];
 
     await this.authService.logout(userId, accessToken);

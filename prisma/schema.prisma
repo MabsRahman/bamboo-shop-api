@@ -240,6 +240,7 @@ model Order {
   coupon        Coupon?       @relation(fields: [couponId], references: [id])
   items         OrderItem[]
   Payment       PaymentTransaction[]
+  Invoice       Invoice[]
 
   Return        ReturnRequest[]
 }
@@ -385,4 +386,13 @@ model NewsletterCampaign {
   sentAt    DateTime @default(now())
   totalSent Int      @default(0)
   status    String   @default("COMPLETED")
+}
+
+model Invoice {
+  id            Int      @id @default(autoincrement())
+  orderId       Int      @unique
+  invoiceNumber String   @unique
+  pdfPath       String   
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id])
 }
