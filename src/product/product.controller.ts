@@ -67,13 +67,13 @@ export class ProductController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/subscribe-stock')
   async subscribeStock(@Req() req: AuthRequest, @Param('id') productId: string) {
-    return this.productService.subscribeBackInStock(req.user.sub, Number(productId));
+    return this.productService.subscribeBackInStock(req.user.id, Number(productId));
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id/unsubscribe-stock')
   async unsubscribeStock(@Req() req: AuthRequest, @Param('id') productId: string) {
-    return this.productService.unsubscribeBackInStock(req.user.sub, Number(productId));
+    return this.productService.unsubscribeBackInStock(req.user.id, Number(productId));
   }
 
 }

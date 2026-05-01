@@ -18,7 +18,7 @@ export class RatingController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req: AuthRequest, @Body() dto: CreateRatingDto) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new UnauthorizedException('You must be logged in to create a rating');
     return this.ratingService.create(dto, userId);
   }
@@ -36,7 +36,7 @@ export class RatingController {
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(@Req() req: AuthRequest, @Param('id') id: string, @Body() dto: CreateRatingDto) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new UnauthorizedException();
     return this.ratingService.update(Number(id), dto, userId);
   }
@@ -44,7 +44,7 @@ export class RatingController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Req() req: AuthRequest, @Param('id') id: string) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new UnauthorizedException();
     return this.ratingService.remove(Number(id), userId);
   }

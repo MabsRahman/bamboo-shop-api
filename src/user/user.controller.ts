@@ -19,17 +19,17 @@ export class UserController {
 
   @Get('me')
   async getProfile(@Req() req: AuthRequest) {
-    return this.userService.getProfile(req.user.sub);
+    return this.userService.getProfile(req.user.id);
   }
 
   @Patch()
   async updateProfile(@Req() req: AuthRequest, @Body() dto: UpdateUserDto) {
-    return this.userService.updateProfile(req.user.sub, dto);
+    return this.userService.updateProfile(req.user.id, dto);
   }
 
   @Patch('password')
   async changePassword(@Req() req: AuthRequest, @Body() dto: ChangePasswordDto) {
-    return this.userService.changePassword(req.user.sub, dto);
+    return this.userService.changePassword(req.user.id, dto);
   }
 
   @Post('subscribe')

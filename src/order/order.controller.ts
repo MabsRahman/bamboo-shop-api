@@ -17,7 +17,7 @@ export class OrderController {
 
   @Post()
   async createOrder(@Req() req: AuthRequest, @Body() dto: CreateOrderDto) {
-    return this.orderService.createOrder(req.user.sub, dto);
+    return this.orderService.createOrder(req.user.id, dto);
   }
 
   @Get('my')
@@ -25,7 +25,7 @@ export class OrderController {
     const pageNumber = Number(page);
     const pageSize = Number(limit);
     return this.orderService.getOrdersByUser(
-      Number(req.user.sub),
+      Number(req.user.id),
       status,
       pageNumber,
       pageSize,

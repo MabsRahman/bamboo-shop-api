@@ -27,12 +27,12 @@ export class ReturnController {
 
   @Post()
   async createReturn(@Req() req: AuthRequest, @Body() dto: CreateReturnDto) {
-    return this.returnService.createReturnRequest(req.user.sub, dto.orderId, dto.items);
+    return this.returnService.createReturnRequest(req.user.id, dto.orderId, dto.items);
   }
 
   @Get('my')
   async getMyReturns(@Req() req: AuthRequest) {
-    return this.returnService.getUserReturns(req.user.sub);
+    return this.returnService.getUserReturns(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

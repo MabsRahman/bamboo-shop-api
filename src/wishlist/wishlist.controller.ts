@@ -15,28 +15,28 @@ export class WishlistController {
 
   @Post(':productId')
   async addToWishlist(@Req() req: AuthRequest, @Param('productId') productId: string) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     return this.wishlistService.addToWishlist(userId, Number(productId));
   }
 
   @Get()
   async getWishlist(@Req() req: AuthRequest) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     return this.wishlistService.getUserWishlist(userId);
   }
 
   @Delete(':productId')
   async removeFromWishlist(@Req() req: AuthRequest, @Param('productId') productId: string) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     return this.wishlistService.removeFromWishlist(userId, Number(productId));
   }
   
   @Delete()
   async clearWishlist(@Req() req: AuthRequest) {
-    const userId = req.user?.sub;
+    const userId = req.user.id;
     if (!userId) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     return this.wishlistService.clearWishlist(userId);
   }
