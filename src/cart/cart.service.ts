@@ -33,16 +33,24 @@ export class CartService {
     });
   }
 
-  async updateCartItem(id: number, userId: number, dto: UpdateCartDto) {
-    return this.prisma.cart.update({
-      where: { id },
-      data: { quantity: dto.quantity },
+  async updateCartItem(productId: number, userId: number, dto: UpdateCartDto) {
+    return this.prisma.cart.updateMany({
+      where: { 
+        productId: productId,
+        userId: userId, 
+      },
+      data: { 
+        quantity: dto.quantity 
+      },
     });
   }
 
-  async removeCartItem(id: number, userId: number) {
-    return this.prisma.cart.delete({
-      where: { id },
+  async removeCartItem(productId: number, userId: number) {
+    return this.prisma.cart.deleteMany({
+      where: {
+        productId: productId,
+        userId: userId,
+      },
     });
   }
 

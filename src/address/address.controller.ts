@@ -22,12 +22,12 @@ export class AddressController {
 
   @Post()
   async createAddress(@Req() req: AuthRequest, @Body() dto: CreateAddressDto) {
-    return this.addressService.createAddress(req.user.sub, dto);
+    return this.addressService.createAddress(req.user.id, dto);
   }
 
   @Patch(':id')
   async updateAddress(@Req() req: AuthRequest, @Param('id') id: string, @Body() dto: UpdateAddressDto) {
-    return this.addressService.updateAddress(req.user.sub, Number(id), dto);
+    return this.addressService.updateAddress(req.user.id, Number(id), dto);
   }
 
   @Patch(':id/default')
@@ -37,6 +37,6 @@ export class AddressController {
 
   @Delete(':id')
   async deleteAddress(@Req() req: AuthRequest, @Param('id') id: string) {
-    return this.addressService.deleteAddress(req.user.sub, Number(id));
+    return this.addressService.deleteAddress(req.user.id, Number(id));
   }
 }

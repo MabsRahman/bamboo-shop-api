@@ -37,6 +37,22 @@ export class RatingService {
     return rating;
   }
 
+  async getUserAll(userId: number) {
+    const ratings = await this.prisma.rating.findMany({
+      where: { userId },
+
+      include: {
+        product: true,
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return ratings;
+  }
+
   async update(id: number, dto: CreateRatingDto, userId: number) {
     const rating = await this.prisma.rating.findUnique({ where: { id } });
     if (!rating || rating.userId !== userId) {

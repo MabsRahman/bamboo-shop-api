@@ -29,7 +29,7 @@ export class MailerService {
 
   async sendVerificationEmail(email: string, name: string, token: string) {
     const appUrl = process.env.APP_URL;
-    const verifyUrl = `${appUrl}/auth/verify?token=${token}`;
+    const verifyUrl = `${appUrl}/verify?token=${token}`;
     const html = await this.compileTemplate('verify-email', { name, verifyUrl });
 
     await this.transporter.sendMail({
@@ -42,7 +42,7 @@ export class MailerService {
 
   async sendPasswordResetEmail(email: string, name: string, token: string) {
     const appUrl = process.env.APP_URL;
-    const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
     const html = await this.compileTemplate('reset-password', { name, resetUrl });
 
     await this.transporter.sendMail({

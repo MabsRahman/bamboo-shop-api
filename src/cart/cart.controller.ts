@@ -17,26 +17,26 @@ export class CartController {
 
   @Get()
   getCart(@Req() req: AuthRequest) {
-    return this.cartService.getUserCart(req.user.sub);
+    return this.cartService.getUserCart(req.user.id);
   }
 
   @Post()
   addToCart(@Req() req: AuthRequest, @Body() dto: CreateCartDto) {
-    return this.cartService.addToCart(req.user.sub, dto);
+    return this.cartService.addToCart(req.user.id, dto);
   }
 
-  @Patch(':id')
-  updateCart(@Req() req: AuthRequest, @Param('id') id: string, @Body() dto: UpdateCartDto) {
-    return this.cartService.updateCartItem(Number(id), req.user.sub, dto);
+  @Patch(':productId')
+  updateCart(@Req() req: AuthRequest, @Param('productId') productId: string, @Body() dto: UpdateCartDto) {
+      return this.cartService.updateCartItem(Number(productId), req.user.id, dto);
   }
 
-  @Delete(':id')
-  removeItem(@Req() req: AuthRequest, @Param('id') id: string) {
-    return this.cartService.removeCartItem(Number(id), req.user.sub);
+  @Delete(':productId')
+  removeItem(@Req() req: AuthRequest, @Param('productId') id: string) {
+    return this.cartService.removeCartItem(Number(id), req.user.id);
   }
 
   @Delete()
   clearCart(@Req() req: AuthRequest) {
-    return this.cartService.clearCart(req.user.sub);
+    return this.cartService.clearCart(req.user.id);
   }
 }

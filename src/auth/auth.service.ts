@@ -97,7 +97,7 @@ export class AuthService {
     }
 
     const payload = { sub: user.id, email: user.email, role: 0 };
-    const access_token = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const access_token = this.jwtService.sign(payload, { expiresIn: '24h' });
 
     let refresh_token: string | null = null;
     if (rememberMe) {
@@ -133,7 +133,7 @@ export class AuthService {
     });
 
     const payload = { sub: user.id, email: user.email };
-    const access_token = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const access_token = this.jwtService.sign(payload, { expiresIn: '24h' });
 
     let refresh_token: string | null = null;
     if (rememberMe) {
@@ -154,7 +154,7 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('Invalid refresh token');
 
     const payload = { sub: user.id, email: user.email };
-    const access_token = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const access_token = this.jwtService.sign(payload, { expiresIn: '24h' });
 
     return { access_token };
   }
@@ -254,7 +254,7 @@ export class AuthService {
     };
 
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '8h' }), 
+      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }), 
       admin: {
         id: admin.id,
         name: admin.email,

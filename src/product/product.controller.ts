@@ -45,6 +45,16 @@ export class ProductController {
     });
   }
 
+  @Get('category/:categoryId')
+  findByCategory(@Param('categoryId') categoryId: string) {
+    return this.productService.findByCategory(Number(categoryId));
+  } 
+  
+  @Get('featured')
+  findFeatured(@Query('limit') limit?: number) {
+    return this.productService.findFeatured(Number(limit) || 6);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productService.findOne(Number(id));

@@ -19,18 +19,41 @@ export class OrderService {
     private mailerService: MailerService,
   ) {}
 
+  
   async createOrder(userId: number, dto: CreateOrderDto) {
+    // 1. Check if the user has any profile address recorded yet
     const userAddresses = await this.prisma.address.findMany({
       where: { userId },
     });
     
+    // If they have absolutely zero addresses saved on their account profile,
+    // let's automatically save this checkout address as their default profile address for next time.
     if (!userAddresses || userAddresses.length === 0) {
-      throw new BadRequestException('Please add an address before placing an order.');
+      await this.prisma.address.create({
+        data: {
+          userId,
+          street: dto.street,
+          houseno: dto.houseno,
+          city: dto.city,
+          postalCode: dto.postalCode,
+          isDefault: true,
+        }
+      });
     }
 
+    // 2. Fetch products and check stock limits
     const productIds = dto.cartItems.map(item => item.productId);
     const products = await this.prisma.product.findMany({
       where: { id: { in: productIds } },
+      include: {
+        discounts: {
+          where: {
+            startsAt: { lte: new Date() },
+            endsAt: { gte: new Date() },
+          },
+          take: 1,
+        },
+      },
     });
     
     if (products.length !== dto.cartItems.length) {
@@ -44,11 +67,25 @@ export class OrderService {
       if (product.stock < item.quantity)
         throw new BadRequestException(`Insufficient stock for product: ${product.name}`);
       
-      const subtotal = product.price * item.quantity;
+      let activePrice = product.price;
+      const activeDiscount = product.discounts?.[0];
+
+      if (activeDiscount) {
+        if (activeDiscount.type === 'percentage') {
+          activePrice = product.price * (1 - activeDiscount.value / 100);
+        } else if (activeDiscount.type === 'fixed') {
+          activePrice = Math.max(0, product.price - activeDiscount.value);
+        }
+        activePrice = Math.round(activePrice * 100) / 100;
+      }
+      
+      const subtotal = activePrice * item.quantity;
       subtotalAmount += subtotal;
-      return { productId: item.productId, quantity: item.quantity, price: product.price, subtotal };
+
+      return { productId: item.productId, quantity: item.quantity, price: activePrice, subtotal };
     });
 
+    // 3. Process Coupon Logic
     let discountTotal = 0;
     let appliedCoupon: any = null;
 
@@ -96,22 +133,32 @@ export class OrderService {
       });
     }
 
-    const finalAmount = Math.round((subtotalAmount - discountTotal) * 100) / 100;
+    const baseItemsTotal = Math.round((subtotalAmount - discountTotal) * 100) / 100;
+    const incomingShippingCost = Number(dto.shippingCost || 200); 
+    const finalAmount = Math.round((baseItemsTotal + incomingShippingCost) * 100) / 100;
     const roundedSubtotal = Math.round(subtotalAmount * 100) / 100;
 
+    // 4. Create the Order with the exact chosen Address Snapshot
     const order = await this.prisma.order.create({
       data: {
         userId,
         totalAmount: roundedSubtotal,
         discountTotal: discountTotal,
+        shippingCost: incomingShippingCost,
         finalAmount: finalAmount,
         couponId: appliedCoupon?.id || null,
         paymentMethod: dto.paymentMethod,
         items: { create: orderItemsData },
+        
+        // Added safe default fallback guards to prevent P2011 null constraint errors
+        shippingName: dto.name || 'Customer',
+        shippingPhone: dto.phone || '01000000000',
+        shippingAddress: `${dto.houseno || ''}, ${dto.street || ''}, ${dto.city || ''} - ${dto.postalCode || ''}`.trim()
       },
       include: { items: { include: { product: true } } },
     });
 
+    // 5. Create Payment Transaction
     let paymentTransactionData: any = {
       orderId: order.id,
       amount: finalAmount,
@@ -132,6 +179,7 @@ export class OrderService {
 
     await this.prisma.paymentTransaction.create({ data: paymentTransactionData });
 
+    // 6. Update Product Stocks
     for (const item of dto.cartItems) {
       await this.prisma.product.update({
         where: { id: item.productId },
@@ -145,10 +193,12 @@ export class OrderService {
 
     if (!user) throw new BadRequestException('User not found');
     
-    await this.mailerService.sendOrderConfirmationEmail(user.email, user.name, order); 
+    // 7. Send the email with the snapshot shipping values
+    await this.mailerService.sendOrderConfirmationEmail(user.email, dto.name, order); 
 
     return order;
   }
+
 
   async getOrdersByUser(
     userId: number,

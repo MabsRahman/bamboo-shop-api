@@ -16,6 +16,12 @@ export class RatingController {
   constructor(private readonly ratingService: RatingService) {}
 
   @UseGuards(JwtAuthGuard)
+  @Get('user')
+  findUserAll(@Req() req: AuthRequest) {
+    return this.ratingService.getUserAll(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req: AuthRequest, @Body() dto: CreateRatingDto) {
     const userId = req.user.id;

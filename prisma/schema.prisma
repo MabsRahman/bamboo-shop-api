@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,63 +8,58 @@ datasource db {
 }
 
 model Test {
-  id Int @id @default(autoincrement())
+  id   Int    @id @default(autoincrement())
   name String
 }
 
 model User {
-  id                 Int      @id @default(autoincrement())
-  email              String   @unique
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
   password           String
-  mobile             String?
   name               String
-  isVerified         Boolean  @default(false)
-  verificationToken  String? @unique
+  mobile             String?
+  createdAt          DateTime            @default(now())
+  isVerified         Boolean             @default(false)
+  updatedAt          DateTime            @updatedAt
+  verificationToken  String?             @unique
   resetPasswordToken String?
   resetTokenExpiry   DateTime?
   refreshToken       String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  isSubscribed       Boolean             @default(false)
   addresses          Address[]
-  ratings            Rating[]
-
-  wishlists          Wishlist[]
   carts              Cart[]
+  ContactMessage     ContactMessage[]
   coupons            Coupon[]
   couponLinks        CouponUser[]
-
-  orders             Order[]  
+  orders             Order[]
+  ratings            Rating[]
   Return             ReturnRequest[]
-
-  isSubscribed       Boolean @default(false)
-
   StockSubscription  StockSubscription[]
-
-  ContactMessage     ContactMessage[]
-  
+  wishlists          Wishlist[]
 }
 
 model InvalidatedToken {
   id        Int      @id @default(autoincrement())
-  token     String   @db.Text
+  token     String   @unique @db.VarChar(4000)
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
 model Address {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  street      String
-  houseno     String
-  city        String
-  state       String?
-  postalCode  String?
-  country     String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  street     String
+  houseno    String
+  city       String
+  state      String?
+  postalCode String?
+  country    String?
+  createdAt  DateTime @default(now())
+  isDefault  Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId], map: "Address_userId_fkey")
 }
 
 model Category {
@@ -83,82 +72,87 @@ model Category {
 }
 
 model Product {
-  id          Int          @id @default(autoincrement())
-  name        String
-  slug        String       @unique
-  description String?
-  price       Float
-  stock       Int          @default(0)
-  isFeatured  Boolean      @default(false)
-  categoryId  Int
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                Int                   @id @default(autoincrement())
+  name              String
+  slug              String                @unique
+  description       String?
+  price             Float
+  stock             Int                   @default(0)
+  isFeatured        Boolean               @default(false)
+  categoryId        Int
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  carts             Cart[]
+  coupons           Coupon[]
+  couponLinks       CouponProduct[]
+  discounts         Discount[]
+  orderItems        OrderItem[]
+  category          Category              @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  images            ProductImage[]
+  tags              ProductTag[]
+  ratings           Rating[]
+  Retuen            ReturnRequestDetail[]
+  StockSubscription StockSubscription[]
+  wishlists         Wishlist[]
 
-  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  discounts   Discount[]
-  images      ProductImage[]
-  tags        ProductTag[]
-  ratings     Rating[]
-  wishlists   Wishlist[]
-  carts       Cart[]
-  coupons     Coupon[]
-  couponLinks CouponProduct[]
-
-  orderItems  OrderItem[]
-  Retuen      ReturnRequestDetail[]
-
-  StockSubscription  StockSubscription[]
+  @@index([categoryId], map: "Product_categoryId_fkey")
 }
 
 model Discount {
   id        Int       @id @default(autoincrement())
   productId Int
-  type      String 
+  type      String
   value     Float
   startsAt  DateTime?
   endsAt    DateTime?
   createdAt DateTime  @default(now())
-
   product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "Discount_productId_fkey")
 }
 
 model Coupon {
-  id          Int       @id @default(autoincrement())
-  code        String    @unique
-  type        String
-  value       Float
-  usageLimit  Int?
-  usedCount   Int       @default(0)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  createdAt   DateTime  @default(now())
-
-  productId   Int?
-  userId      Int?
-
-  product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id             Int             @id @default(autoincrement())
+  code           String          @unique
+  type           String
+  value          Float
+  usageLimit     Int?
+  usedCount      Int             @default(0)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime        @default(now())
+  productId      Int?
+  userId         Int?
+  product        Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   couponProducts CouponProduct[]
   couponUsers    CouponUser[]
+  orders         Order[]
 
-  orders      Order[]
+  @@index([productId], map: "Coupon_productId_fkey")
+  @@index([userId], map: "Coupon_userId_fkey")
 }
 
 model CouponProduct {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   couponId  Int
   productId Int
-  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  coupon    Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([couponId], map: "CouponProduct_couponId_fkey")
+  @@index([productId], map: "CouponProduct_productId_fkey")
 }
 
 model CouponUser {
-  id        Int      @id @default(autoincrement())
-  couponId  Int
-  userId    Int
-  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       Int    @id @default(autoincrement())
+  couponId Int
+  userId   Int
+  coupon   Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([couponId], map: "CouponUser_couponId_fkey")
+  @@index([userId], map: "CouponUser_userId_fkey")
 }
 
 model ProductImage {
@@ -167,24 +161,25 @@ model ProductImage {
   url       String
   isPrimary Boolean  @default(false)
   createdAt DateTime @default(now())
-
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "ProductImage_productId_fkey")
 }
 
 model Tag {
-  id    Int          @id @default(autoincrement())
-  name  String       @unique
+  id       Int          @id @default(autoincrement())
+  name     String       @unique
   products ProductTag[]
 }
 
 model ProductTag {
   productId Int
   tagId     Int
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([productId, tagId])
+  @@index([tagId], map: "ProductTag_tagId_fkey")
 }
 
 model Rating {
@@ -195,9 +190,11 @@ model Rating {
   review    String?
   status    String   @default("pending")
   createdAt DateTime @default(now())
-
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "Rating_productId_fkey")
+  @@index([userId], map: "Rating_userId_fkey")
 }
 
 model Wishlist {
@@ -205,119 +202,119 @@ model Wishlist {
   userId    Int
   productId Int
   createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+  @@index([productId], map: "Wishlist_productId_fkey")
 }
 
 model Cart {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  productId  Int
-  quantity   Int      @default(1)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@index([productId], map: "Cart_productId_fkey")
+  @@index([userId], map: "Cart_userId_fkey")
 }
 
 model Order {
-  id            Int          @id @default(autoincrement())
+  id            Int                  @id @default(autoincrement())
   userId        Int
   totalAmount   Float
   discountTotal Float?
+  shippingCost  Float                @default(0.0)
   finalAmount   Float
-  status        String        @default("pending")
-  couponId      Int? 
+  status        String               @default("pending")
+  couponId      Int?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   paymentMethod String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  coupon        Coupon?       @relation(fields: [couponId], references: [id])
+  Invoice       Invoice?
+  coupon        Coupon?              @relation(fields: [couponId], references: [id])
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   items         OrderItem[]
   Payment       PaymentTransaction[]
-  Invoice       Invoice[]
-
   Return        ReturnRequest[]
-}
 
-enum PaymentMethod {
-  COD
-  PAYPAL
-  BKASH
-  NAGAD
-  VISA
-  MASTERCARD
+  shippingName    String?
+  shippingPhone   String?
+  shippingAddress String?
+
+  @@index([couponId], map: "Order_couponId_fkey")
+  @@index([userId], map: "Order_userId_fkey")
 }
 
 model OrderItem {
-  id        Int       @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   orderId   Int
   productId Int
   quantity  Int
   price     Float
   subtotal  Float
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
 
-  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product    @relation(fields: [productId], references: [id])
+  @@index([orderId], map: "OrderItem_orderId_fkey")
+  @@index([productId], map: "OrderItem_productId_fkey")
 }
 
 model PaymentTransaction {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  provider  PaymentMethod
-  amount    Float
-  status    String
-  transactionId String? @unique
-  createdAt DateTime @default(now())
+  id            Int           @id @default(autoincrement())
+  orderId       Int
+  provider      PaymentMethod
+  amount        Float
+  status        String
+  transactionId String?       @unique
+  createdAt     DateTime      @default(now())
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@index([orderId], map: "PaymentTransaction_orderId_fkey")
 }
 
 model ReturnRequest {
-  id           Int           @id @default(autoincrement())
+  id           Int                   @id @default(autoincrement())
   orderId      Int
   userId       Int
-  status       ReturnStatus  @default(PENDING)
+  status       ReturnStatus          @default(PENDING)
   refundAmount Float?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  order        Order         @relation(fields: [orderId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  order        Order                 @relation(fields: [orderId], references: [id])
+  user         User                  @relation(fields: [userId], references: [id])
   details      ReturnRequestDetail[]
-}
 
-enum ReturnStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  REFUNDED
+  @@index([orderId], map: "ReturnRequest_orderId_fkey")
+  @@index([userId], map: "ReturnRequest_userId_fkey")
 }
 
 model ReturnRequestDetail {
-  id              Int      @id @default(autoincrement())
+  id              Int                        @id @default(autoincrement())
   returnRequestId Int
   productId       Int
   reason          String
-  createdAt       DateTime @default(now())
-
-  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id])
-  product         Product       @relation(fields: [productId], references: [id])
+  createdAt       DateTime                   @default(now())
+  product         Product                    @relation(fields: [productId], references: [id])
+  returnRequest   ReturnRequest              @relation(fields: [returnRequestId], references: [id])
   images          ReturnRequestDetailImage[]
+
+  @@index([productId], map: "ReturnRequestDetail_productId_fkey")
+  @@index([returnRequestId], map: "ReturnRequestDetail_returnRequestId_fkey")
 }
 
 model ReturnRequestDetailImage {
-  id                  Int                 @id @default(autoincrement())
+  id                    Int                 @id @default(autoincrement())
   returnRequestDetailId Int
-  url                 String
-  createdAt           DateTime            @default(now())
+  url                   String
+  createdAt             DateTime            @default(now())
+  returnRequestDetail   ReturnRequestDetail @relation(fields: [returnRequestDetailId], references: [id], onDelete: Cascade)
 
-  returnRequestDetail ReturnRequestDetail @relation(fields: [returnRequestDetailId], references: [id], onDelete: Cascade)
+  @@index([returnRequestDetailId], map: "ReturnRequestDetailImage_returnRequestDetailId_fkey")
 }
 
 model StockSubscription {
@@ -325,9 +322,11 @@ model StockSubscription {
   userId    Int
   productId Int
   createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([productId], map: "StockSubscription_productId_fkey")
+  @@index([userId], map: "StockSubscription_userId_fkey")
 }
 
 model ContactMessage {
@@ -337,23 +336,24 @@ model ContactMessage {
   email        String
   subject      String
   message      String
-  
-  isReplied    Boolean  @default(false)
-  replyMessage String?  @db.Text
   createdAt    DateTime @default(now())
+  isReplied    Boolean? @default(false)
+  replyMessage String?  @db.Text
   user         User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "ContactMessage_userId_fkey")
 }
 
 model BlogPost {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
-  slug        String    @unique
+  slug        String   @unique
   content     String
-  image       String? 
-  author      String? 
-  isPublished Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  image       String?
+  author      String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model VisitorLog {
@@ -392,7 +392,29 @@ model Invoice {
   id            Int      @id @default(autoincrement())
   orderId       Int      @unique
   invoiceNumber String   @unique
-  pdfPath       String   
+  pdfPath       String
   createdAt     DateTime @default(now())
   order         Order    @relation(fields: [orderId], references: [id])
+}
+
+model DeliveryCost {
+  id   Int     @id @default(autoincrement())
+  city String  @db.VarChar(100)
+  cost Decimal @db.Decimal(10, 2)
+}
+
+enum PaymentMethod {
+  COD
+  PAYPAL
+  BKASH
+  NAGAD
+  VISA
+  MASTERCARD
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
 }

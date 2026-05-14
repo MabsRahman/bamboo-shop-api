@@ -96,11 +96,13 @@ export class ProductService {
           (!d.endsAt || d.endsAt >= now)
       )[0];
 
-      const discountedPrice = activeDiscount
+      const rawPrice = activeDiscount
         ? activeDiscount.type === 'percentage'
           ? p.price * (1 - activeDiscount.value / 100)
           : p.price - activeDiscount.value
         : p.price;
+
+      const discountedPrice = Number(rawPrice.toFixed(2));
 
       const averageRating =
         p.ratings.length > 0
@@ -130,10 +132,11 @@ export class ProductService {
 
     return productsWithExtras;
   }
+  
 
-  async findOne(id: number) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
+  async findByCategory(categoryId: number) {
+    const products = await this.prisma.product.findMany({
+      where: { categoryId },
       include: {
         category: true,
         images: true,
@@ -142,6 +145,106 @@ export class ProductService {
         discounts: true,
       },
     });
+
+    const now = new Date();
+
+    return products.map((p) => {
+      const activeDiscount = p.discounts?.find(
+        (d) =>
+          (!d.startsAt || d.startsAt <= now) &&
+          (!d.endsAt || d.endsAt >= now),
+      );
+
+      const rawPrice = activeDiscount
+        ? activeDiscount.type === 'percentage'
+          ? p.price * (1 - activeDiscount.value / 100)
+          : p.price - activeDiscount.value
+        : p.price;
+
+      const discountedPrice = Number(rawPrice.toFixed(2));
+
+      const averageRating =
+        p.ratings.length > 0
+          ? p.ratings.reduce((sum, r) => sum + r.rating, 0) /
+            p.ratings.length
+          : 0;
+
+      return {
+        ...p,
+        discountedPrice,
+        averageRating,
+      };
+    });
+  }
+
+  async findFeatured(limit = 6) {
+    const products = await this.prisma.product.findMany({
+      where: { isFeatured: true },
+      take: limit,
+      include: {
+        category: true,
+        images: true,
+        tags: { include: { tag: true } },
+        ratings: true,
+        discounts: true,
+      },
+    });
+
+    const now = new Date();
+
+    return products.map((p) => {
+      const activeDiscount = p.discounts?.find(
+        (d) =>
+          (!d.startsAt || d.startsAt <= now) &&
+          (!d.endsAt || d.endsAt >= now)
+      );
+
+      const rawPrice = activeDiscount
+        ? activeDiscount.type === 'percentage'
+          ? p.price * (1 - activeDiscount.value / 100)
+          : p.price - activeDiscount.value
+        : p.price;
+
+      const discountedPrice = Number(rawPrice.toFixed(2));
+
+      const averageRating =
+        p.ratings.length > 0
+          ? p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length
+          : 0;
+
+      return {
+        ...p,
+        discountedPrice,
+        averageRating,
+      };
+    });
+  }
+
+
+  async findOne(id: number) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        images: true,
+        tags: { include: { tag: true } },
+        ratings: {
+          where: {
+            status: 'approved',
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        discounts: true,
+      },
+    });
+    
     if (!product) throw new NotFoundException('Product not found');
 
     const now = new Date();
@@ -152,11 +255,13 @@ export class ProductService {
         (!d.endsAt || d.endsAt >= now)
     )[0];
 
-    const discountedPrice = activeDiscount
+    const rawPrice = activeDiscount
       ? activeDiscount.type === 'percentage'
         ? product.price * (1 - activeDiscount.value / 100)
         : product.price - activeDiscount.value
       : product.price;
+
+    const discountedPrice = Math.round(rawPrice * 100) / 100;
 
     const averageRating =
       product.ratings.length > 0

@@ -4,15 +4,26 @@
   <meta charset="UTF-8" />
   <title>Order Confirmation - Bamboo Shop</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f6f9fc; color: #333; }
-    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { color: #2b7a0b; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #f3f3f3; }
-    a.button { display: inline-block; padding: 12px 20px; background: #2b7a0b; color: #fff; text-decoration: none; border-radius: 8px; margin-top: 20px; }
-    a.button:hover { background: #25660a; }
-    p { margin: 10px 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f6f9fc; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eef2f6; }
+    h2 { color: #2b7a0b; margin-top: 0; font-size: 24px; font-weight: 800; }
+    h3 { color: #111827; font-size: 16px; font-weight: 700; margin-top: 25px; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; }
+    table.items-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    table.items-table th, table.items-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+    table.items-table th { background-color: #f9fafb; color: #4b5563; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+    table.items-table td { color: #1f2937; }
+    .summary-wrapper { width: 100%; max-width: 280px; margin-left: auto; margin-top: 20px; font-size: 14px; line-height: 1.6; }
+    .summary-row { width: 100%; margin-bottom: 4px; }
+    .summary-left { text-align: left; color: #6b7280; padding-bottom: 4px; }
+    .summary-right { text-align: right; font-weight: bold; color: #111827; padding-bottom: 4px; }
+    .discount-text { color: #2b7a0b !important; }
+    .grand-total-row { border-top: 1px dashed #e5e7eb; padding-top: 8px; margin-top: 6px; font-size: 16px; font-weight: bold; }
+    .grand-total-row .summary-left { color: #111827; font-weight: 700; }
+    .grand-total-row .summary-right { color: #2b7a0b; font-weight: 800; }
+    .notice-text { font-size: 13px; color: #6b7280; line-height: 1.5; margin-top: 25px; }
+    .btn-container { text-align: center; margin-top: 30px; }
+    a.button { display: inline-block; padding: 14px 32px; background: #2b7a0b; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 6px rgba(43, 122, 11, 0.15); }
+    p { margin: 12px 0; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -21,37 +32,75 @@
     <p>Thank you for your order! Your order has been successfully placed.</p>
 
     <h3>Order Details:</h3>
-    <table>
+    <table class="items-table">
       <thead>
         <tr>
           <th>Product</th>
-          <th>Quantity</th>
-          <th>Price (BDT)</th>
-          <th>Subtotal (BDT)</th>
+          <th style="text-align: center; width: 50px;">Qty</th>
+          <th style="text-align: right;">Price</th>
+          <th style="text-align: right;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
         {{#each order.items}}
         <tr>
-          <td>{{this.product.name}}</td>
-          <td>{{this.quantity}}</td>
-          <td>BDT {{this.price}}</td>
-          <td>BDT {{this.subtotal}}</td>
+          <td><strong>{{this.product.name}}</strong></td>
+          <td style="text-align: center;">{{this.quantity}}</td>
+          <td style="text-align: right;">BDT {{this.price}}</td>
+          <td style="text-align: right;">BDT {{this.subtotal}}</td>
         </tr>
         {{/each}}
       </tbody>
     </table>
 
-    <p><strong>Total Amount:</strong> BDT {{order.totalAmount}}</p>
-    <p><strong>Discount:</strong> BDT {{order.discountTotal}}</p>
-    <p><strong>Payment Method:</strong> {{order.paymentMethod}}</p>
+    <table class="summary-wrapper" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td class="summary-left">Items Subtotal:</td>
+        <td class="summary-right">BDT {{order.totalAmount}}</td>
+      </tr>
+      {{#if order.discountTotal}}
+      <tr>
+        <td class="summary-left discount-text">Coupon Discount:</td>
+        <td class="summary-right discount-text">- BDT {{order.discountTotal}}</td>
+      </tr>
+      {{/if}}
+      <tr>
+        <td class="summary-left">Shipping Cost:</td>
+        <td class="summary-right">BDT {{order.shippingCost}}</td>
+      </tr>
+      <tr class="grand-total-row">
+        <td class="summary-left" style="padding-top: 8px;">Total Paid/Due:</td>
+        <td class="summary-right" style="padding-top: 8px;">BDT {{order.finalAmount}}</td>
+      </tr>
+    </table>
 
-    <p>We will process your order shortly and notify you once it has been shipped. You will also receive updates about the delivery status so you can track your package every step of the way.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px; border-collapse: collapse;">
+      <tr>
+        <td width="48%" valign="top" style="background-color: #f9fafb; padding: 16px; border-radius: 12px; border: 1px solid #f1f5f9; font-size: 14px; color: #4b5563; line-height: 1.5;">
+          <div style="font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Shipping Address</div>
+          <strong style="color: #111827; font-size: 15px;">{{order.shippingName}}</strong><br />
+          <span style="color: #1f2937;">{{order.shippingAddress}}</span><br />
+          <span style="font-size: 13px; color: #6b7280; display: inline-block; margin-top: 4px;">📞 {{order.shippingPhone}}</span>
+        </td>
+        <td width="4%">&nbsp;</td>
+        <td width="48%" valign="top" style="background-color: #f9fafb; padding: 16px; border-radius: 12px; border: 1px solid #f1f5f9; font-size: 14px; color: #4b5563; line-height: 1.5;">
+          <div style="font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Information</div>
+          <p style="margin: 0 0 4px 0;"><strong>Method:</strong> {{order.paymentMethod}}</p>
+          <p style="margin: 0;"><strong>Status:</strong> <span style="color: #b45309; font-weight: bold;">Pending Dispatch</span></p>
+        </td>
+      </tr>
+    </table>
 
-    <p>View your order: <a class="button" href="{{appUrl}}/orders/my" target="_blank">Click here</a></p>
+    <p class="notice-text">
+      Our team is processing your order. You will receive an automated notification as soon as the package is officially dispatched containing your formal downloadable PDF invoice.
+    </p>
 
-    <p>Thank you for shopping with Bamboo Shop!</p>
-    <p>Best regards,<br/>Bamboo Shop Team</p>
+    <div class="btn-container">
+      <a class="button" href="{{appUrl}}/orders" target="_blank">View My Orders</a>
+    </div>
+
+    <p style="margin-top: 35px; font-size: 14px;">Thank you for shopping with <strong>Bamboo Shop</strong>!</p>
+    <p style="font-size: 14px; color: #6b7280;">Best regards,<br/><strong>Bamboo Shop Team</strong></p>
   </div>
 </body>
 </html>
