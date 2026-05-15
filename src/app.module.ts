@@ -43,9 +43,13 @@ import { DeliveryController } from './delivery-cost/delivery.controller';
 import { DeliveryService } from './delivery-cost/delivery.service';
 import { DeliveryModule } from './delivery-cost/delivery.module';
 
+import { SubcriptionController } from './subcription/subcription.controller';
+import { SubcriptionService } from './subcription/subcription.service';
+import { SubcriptionModule } from './subcription/subcription.module';
+
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule, ContactModule, BlogModule, VisitorModule, CouponModule, NewsletterModule, DashboardModule, DeliveryModule],
-  controllers: [AppController, ProductController, RatingController, PaymentController, BlogController, CouponController, NewsletterController, DashboardController, DeliveryController],
-  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService, BlogService, CouponService, NewsletterService, DashboardService, DeliveryService],
+  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule, ContactModule, BlogModule, VisitorModule, CouponModule, NewsletterModule, DashboardModule, DeliveryModule, SubcriptionModule],
+  controllers: [AppController, ProductController, RatingController, PaymentController, BlogController, CouponController, NewsletterController, DashboardController, DeliveryController, SubcriptionController],
+  providers: [AppService, ProductService, RatingService, PaymentService, ReturnService, BlogService, CouponService, NewsletterService, DashboardService, DeliveryService, SubcriptionService],
 })
 export class AppModule {}
