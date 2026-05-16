@@ -42,13 +42,13 @@ export class ReturnController {
     @Query('status') status?: string,
     @Query('page') page = '1',
     @Query('limit') limit = '10',
-    @Query('orderId') orderId?: string,
+    @Query('search') search?: string, 
   ) {
     return this.returnService.getAllReturnsForAdmin(
       status,
       Number(page),
       Number(limit),
-      orderId ? Number(orderId) : undefined,
+      search,
     );
   }
 

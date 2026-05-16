@@ -47,8 +47,41 @@ import { SubcriptionController } from './subcription/subcription.controller';
 import { SubcriptionService } from './subcription/subcription.service';
 import { SubcriptionModule } from './subcription/subcription.module';
 
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { UploadModule } from './upload/upload.module';
+
 @Module({
-  imports: [PrismaModule, AuthModule, MailerModule, UserModule, AddressModule, CategoryModule, ProductModule, DiscountModule, RatingModule, WishlistModule, CartModule, OrderModule, PaymentModule, ReturnModule, ScheduleModule.forRoot(), CartReminderModule, ContactModule, BlogModule, VisitorModule, CouponModule, NewsletterModule, DashboardModule, DeliveryModule, SubcriptionModule],
+  imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
+    PrismaModule, 
+    AuthModule, 
+    MailerModule, 
+    UserModule, 
+    AddressModule, 
+    CategoryModule, 
+    ProductModule, 
+    DiscountModule, 
+    RatingModule, 
+    WishlistModule, 
+    CartModule, 
+    OrderModule, 
+    PaymentModule, 
+    ReturnModule, 
+    ScheduleModule.forRoot(), 
+    CartReminderModule, 
+    ContactModule, 
+    BlogModule, 
+    VisitorModule, 
+    CouponModule, 
+    NewsletterModule, 
+    DashboardModule, 
+    DeliveryModule, 
+    SubcriptionModule, UploadModule
+  ],
   controllers: [AppController, ProductController, RatingController, PaymentController, BlogController, CouponController, NewsletterController, DashboardController, DeliveryController, SubcriptionController],
   providers: [AppService, ProductService, RatingService, PaymentService, ReturnService, BlogService, CouponService, NewsletterService, DashboardService, DeliveryService, SubcriptionService],
 })

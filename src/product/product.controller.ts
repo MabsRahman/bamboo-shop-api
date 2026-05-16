@@ -29,10 +29,15 @@ export class ProductController {
     @Query('categoryId') categoryId?: number,
     @Query('minPrice') minPrice?: number,
     @Query('maxPrice') maxPrice?: number,
-    @Query('sortBy') sortBy?: 'price' | 'createdAt' | 'name' | 'rating',
+    @Query('sortBy') sortBy?: 'price' | 'createdAt' | 'name' | 'rating' | 'stock',
     @Query('order') order?: 'asc' | 'desc',
-    @Query('featured') featured?: boolean,
+    @Query('featured') featured?: string,
   ) {
+    // Explicit conversion logic for URL string parameters
+    let isFeaturedBoolean: boolean | undefined = undefined;
+    if (featured === 'true') isFeaturedBoolean = true;
+    if (featured === 'false') isFeaturedBoolean = false;
+
     return this.productService.findAll({
       page: Number(page) || 1,
       limit: Number(limit) || 10,
@@ -41,7 +46,7 @@ export class ProductController {
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       sortBy,
       order,
-      featured,
+      featured: isFeaturedBoolean,
     });
   }
 

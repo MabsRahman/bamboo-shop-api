@@ -88,24 +88,54 @@ export class ReturnService {
     });
   }
 
-  async getAllReturnsForAdmin(status?: string, page = 1, limit = 10, orderId?: number) {
+  async getAllReturnsForAdmin(status?: string, page = 1, limit = 10, search?: string) {
     const skip = (page - 1) * limit;
     const where: any = {};
 
-    if (status) where.status = status;
-    if (orderId) where.orderId = orderId;
+    if (status) {
+      where.status = status.toUpperCase();
+    }
 
-    return this.prisma.returnRequest.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { name: true, email: true, mobile: true } },
-        order: true,
-        details: { include: { product: true, images: true } },
-      },
-    });
+    if (search) {
+      const cleanSearch = search.trim();
+      const numericValue = Number(cleanSearch);
+
+      if (!isNaN(numericValue) && cleanSearch !== '') {
+        where.OR = [
+          { id: numericValue },
+          { orderId: numericValue }
+        ];
+      } else {
+        where.user = {
+          OR: [
+            { name: { contains: cleanSearch } },
+            { email: { contains: cleanSearch } }
+          ]
+        };
+      }
+    }
+
+    const [returns, total] = await Promise.all([
+      this.prisma.returnRequest.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { name: true, email: true, mobile: true } },
+          order: true,
+          details: { include: { product: true, images: true } },
+        },
+      }),
+      this.prisma.returnRequest.count({ where }),
+    ]);
+
+    return {
+      returns,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
   }
 
   async updateReturnStatus(id: number, status: string) {

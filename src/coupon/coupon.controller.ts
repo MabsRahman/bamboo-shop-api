@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, ParseIntPipe, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, ParseIntPipe, Query, BadRequestException, Req } from '@nestjs/common';
 import { CouponService } from './coupon.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -41,11 +41,11 @@ export class CouponController {
   @UseGuards(JwtAuthGuard)
   async validate(
     @Body() body: { code: string; productIds: number[] },
-    @Query('userId', ParseIntPipe) userId: number
+    @Req() req: any
   ) {
     if (!body.code) {
       throw new BadRequestException('Coupon code is required');
     }
-    return this.couponService.validateCoupon(body.code, userId, body.productIds);
+    return this.couponService.validateCoupon(body.code, req.user.id, body.productIds);
   }
 }

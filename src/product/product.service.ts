@@ -8,40 +8,44 @@ export class ProductService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateProductDto) {
-    const product = await this.prisma.product.create({
+    const generatedSlug = dto.name.toLowerCase().replace(/\s+/g, '-');
+
+    return await this.prisma.product.create({
       data: {
         name: dto.name,
-        slug: dto.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: generatedSlug,
         description: dto.description,
         price: dto.price,
         stock: dto.stock,
         categoryId: dto.categoryId,
-      },
-    });
-
-    if (dto.tags?.length) {
-      for (const tagName of dto.tags) {
-        let tag = await this.prisma.tag.findUnique({ where: { name: tagName } });
-        if (!tag) {
-          tag = await this.prisma.tag.create({ data: { name: tagName } });
-        }
-        await this.prisma.productTag.create({ data: { productId: product.id, tagId: tag.id } });
-      }
-    }
-
-    if (dto.images?.length) {
-      for (const img of dto.images) {
-        await this.prisma.productImage.create({
-          data: {
-            productId: product.id,
+        isFeatured: dto.isFeatured || false,
+        images: dto.images?.length ? {
+          create: dto.images.map(img => ({
             url: img.url,
-            isPrimary: img.isPrimary || false,
-          },
-        });
+            isPrimary: img.isPrimary || false
+          }))
+        } : undefined,
+        tags: dto.tags?.length ? {
+          create: dto.tags.map(tagName => ({
+            tag: {
+              connectOrCreate: {
+                where: { name: tagName },
+                create: { name: tagName }
+              }
+            }
+          }))
+        } : undefined
+      },
+      include: {
+        images: true,
+        category: true,
+        tags: {
+          include: {
+            tag: true
+          }
+        }
       }
-    }
-
-    return product;
+    });
   }
 
   async findAll(query: {
@@ -50,7 +54,7 @@ export class ProductService {
     categoryId?: number;
     minPrice?: number;
     maxPrice?: number;
-    sortBy?: 'price' | 'createdAt' | 'name' | 'rating';
+    sortBy?: 'price' | 'createdAt' | 'name' | 'rating' | 'stock';
     order?: 'asc' | 'desc';
     featured?: boolean;
   }) {
@@ -85,6 +89,7 @@ export class ProductService {
         ratings: true,
         discounts: true,
       },
+      orderBy: sortBy !== 'rating' && sortBy !== 'stock' ? { [sortBy]: order } : undefined
     });
 
     const now = new Date();
@@ -122,6 +127,12 @@ export class ProductService {
           ? (a.averageRating ?? 0) - (b.averageRating ?? 0)
           : (b.averageRating ?? 0) - (a.averageRating ?? 0),
       );
+    } else if (sortBy === 'stock') {
+      productsWithExtras.sort((a, b) => {
+        if (a.stock === 0 && b.stock !== 0) return -1;
+        if (a.stock !== 0 && b.stock === 0) return 1;
+        return a.stock - b.stock;
+      });
     } else {
       productsWithExtras.sort((a, b) =>
         order === 'asc'
@@ -279,41 +290,52 @@ export class ProductService {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
 
-    const updated = await this.prisma.product.update({
+    const generatedSlug = dto.name ? dto.name.toLowerCase().replace(/\s+/g, '-') : undefined;
+
+    if (dto.tags) {
+      await this.prisma.productTag.deleteMany({ where: { productId: id } });
+    }
+    if (dto.images) {
+      await this.prisma.productImage.deleteMany({ where: { productId: id } });
+    }
+
+    return await this.prisma.product.update({
       where: { id },
       data: {
         name: dto.name,
-        slug: dto.name ? dto.name.toLowerCase().replace(/\s+/g, '-') : undefined,
+        slug: generatedSlug,
         description: dto.description,
         price: dto.price,
         stock: dto.stock,
-        ...(dto.categoryId ? { categoryId: dto.categoryId } : {}),
+        categoryId: dto.categoryId,
+        isFeatured: dto.isFeatured,
+        images: dto.images?.length ? {
+          create: dto.images.map(img => ({
+            url: img.url,
+            isPrimary: img.isPrimary || false
+          }))
+        } : undefined,
+        tags: dto.tags?.length ? {
+          create: dto.tags.map(tagName => ({
+            tag: {
+              connectOrCreate: {
+                where: { name: tagName },
+                create: { name: tagName }
+              }
+            }
+          }))
+        } : undefined
       },
-    });
-
-    if (dto.tags?.length) {
-      await this.prisma.productTag.deleteMany({ where: { productId: id } });
-
-      for (const tagName of dto.tags) {
-        let tag = await this.prisma.tag.findUnique({ where: { name: tagName } });
-        if (!tag) {
-          tag = await this.prisma.tag.create({ data: { name: tagName } });
+      include: {
+        images: true,
+        category: true,
+        tags: {
+          include: {
+            tag: true
+          }
         }
-        await this.prisma.productTag.create({ data: { productId: id, tagId: tag.id } });
       }
-    }
-
-    if (dto.images?.length) {
-      await this.prisma.productImage.deleteMany({ where: { productId: id } });
-
-      for (const img of dto.images) {
-        await this.prisma.productImage.create({
-          data: { productId: id, url: img.url, isPrimary: img.isPrimary || false },
-        });
-      }
-    }
-
-    return updated;
+    });
   }
 
   async remove(id: number) {

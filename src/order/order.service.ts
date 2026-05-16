@@ -258,12 +258,25 @@ export class OrderService {
     if (userId) where.userId = userId;
 
     if (search) {
-      where.user = {
-        OR: [
-          { name: { contains: search } },
-          { email: { contains: search } },
-        ],
-      };
+      const cleanSearch = search.trim();
+      const numericValue = Number(cleanSearch);
+
+      if (!isNaN(numericValue) && cleanSearch !== '') {
+        where.id = numericValue;
+      } else {
+        where.OR = [
+          { shippingName: { contains: cleanSearch } },
+          { shippingAddress: { contains: cleanSearch } },
+          {
+            user: {
+              OR: [
+                { name: { contains: cleanSearch } },
+                { email: { contains: cleanSearch } }
+              ]
+            }
+          }
+        ];
+      }
     }
 
     if (fromDate || toDate) {
@@ -276,34 +289,44 @@ export class OrderService {
       }
     }
 
-    return this.prisma.order.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { 
-          select: { 
-            name: true, 
-            email: true,
-            mobile: true,
-            addresses: {
-              where: { isDefault: true },
-              take: 1
-            }
-          } 
-        },
-        items: { 
-          include: { 
-            product: {
-              select: { name: true, price: true, images: { take: 1 } }
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { 
+            select: { 
+              name: true, 
+              email: true,
+              mobile: true,
+              addresses: {
+                where: { isDefault: true },
+                take: 1
+              }
             } 
-          } 
-        },
-        Payment: true,
-        Invoice: true
-      }
-    });
+          },
+          items: { 
+            include: { 
+              product: {
+                select: { name: true, price: true, images: { take: 1 } }
+              } 
+            } 
+          },
+          Payment: true,
+          Invoice: true
+        }
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return {
+      orders,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
   }
 
   async getOrderDetailForAdmin(orderId: number) {

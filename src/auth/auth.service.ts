@@ -254,7 +254,7 @@ export class AuthService {
     };
 
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }), 
+      access_token: this.jwtService.sign(payload, { expiresIn: '30d' }), 
       admin: {
         id: admin.id,
         name: admin.email,
@@ -292,6 +292,84 @@ export class AuthService {
         role: newAdmin.role,
       },
     };
+  }
+
+  async getAllAdmins() {
+    return this.prisma.admin.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        active: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async toggleAdminStatus(adminId: number) {
+    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) throw new BadRequestException('Admin profile not found');
+    
+    return this.prisma.admin.update({
+      where: { id: adminId },
+      data: { active: !admin.active },
+      select: { id: true, active: true },
+    });
+  }
+
+  async removeAdmin(adminId: number) {
+    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) throw new BadRequestException('Admin profile not found');
+
+    await this.prisma.admin.delete({ where: { id: adminId } });
+    return { message: 'Admin account removed successfully from database records' };
+  }
+
+  async getAdminProfile(adminId: number) {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+      select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+    });
+    if (!admin) throw new BadRequestException('Admin profile not found');
+    return admin;
+  }
+
+  async updateAdminProfile(adminId: number, name: string, email: string) {
+    const duplicateEmail = await this.prisma.admin.findFirst({
+      where: { email, NOT: { id: adminId } },
+    });
+    if (duplicateEmail) {
+      throw new BadRequestException('Email address already claimed by another staff profile');
+    }
+
+    await this.prisma.admin.update({
+      where: { id: adminId },
+      data: { name, email },
+    });
+    return { statusCode: 200, message: 'Administrative profile data synced successfully' };
+  }
+
+  async changeAdminPassword(adminId: number, dto: any) {
+    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) throw new BadRequestException('Admin account not found');
+
+    const validPassword = await bcrypt.compare(dto.oldPassword, admin.password);
+    if (!validPassword) throw new UnauthorizedException('Current security credential verification failed');
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)?(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
+    if (!passwordRegex.test(dto.newPassword)) {
+      throw new BadRequestException('New password must be at least 6 characters long and contain symbols');
+    }
+
+    const hashedToken = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.admin.update({
+      where: { id: adminId },
+      data: { password: hashedToken },
+    });
+
+    return { statusCode: 200, message: 'Administrative password updated successfully' };
   }
 
 }

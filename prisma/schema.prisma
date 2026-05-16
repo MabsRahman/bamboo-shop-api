@@ -411,6 +411,15 @@ model EmailSubscribe {
   updatedAt DateTime @updatedAt
 }
 
+model GuestNewsletterCampaign {
+  id        Int      @id @default(autoincrement())
+  subject   String
+  message   String
+  sentAt    DateTime @default(now())
+  totalSent Int      @default(0)
+  status    String   @default("COMPLETED")
+}
+
 enum PaymentMethod {
   COD
   PAYPAL

@@ -104,6 +104,7 @@ export class UserService {
           name: true,
           email: true,
           mobile: true,
+          isVerified: true,
           createdAt: true,
           _count: { select: { orders: true } },
         },

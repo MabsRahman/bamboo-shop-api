@@ -7,14 +7,24 @@ import { UpdateDiscountDto } from './dto/update-discount.dto';
 export class DiscountService {
   constructor(private prisma: PrismaService) {}
 
+  private mapDiscountStatus(discount: any) {
+    const now = new Date();
+    let status: 'SCHEDULED' | 'ACTIVE' | 'EXPIRED' = 'ACTIVE';
+
+    if (discount.startsAt > now) {
+      status = 'SCHEDULED';
+    } else if (discount.endsAt && discount.endsAt < now) {
+      status = 'EXPIRED';
+    }
+
+    return { ...discount, status };
+  }
+
   async create(dto: CreateDiscountDto) {
     const product = await this.prisma.product.findUnique({ 
       where: { id: dto.productId } 
     });
-
-    if (!product) {
-      throw new BadRequestException('Product not found');
-    }
+    if (!product) throw new BadRequestException('Product not found');
 
     const start = dto.startsAt ? new Date(dto.startsAt) : new Date();
     const end = dto.endsAt ? new Date(dto.endsAt) : null;
@@ -23,65 +33,81 @@ export class DiscountService {
       throw new BadRequestException('Start date cannot be after end date');
     }
 
+    const conditions: any[] = [
+      { startsAt: { lte: start }, OR: [{ endsAt: null }, { endsAt: { gte: start } }] }
+    ];
+
+    if (end) {
+      conditions.push({ startsAt: { lte: end }, OR: [{ endsAt: null }, { endsAt: { gte: end } }] });
+      conditions.push({ startsAt: { gte: start }, endsAt: { lte: end } });
+    } else {
+      conditions.push({ startsAt: { gte: start } });
+    }
+
     const overlapping = await this.prisma.discount.findFirst({
       where: {
         productId: dto.productId,
-        OR: [
-          {
-            startsAt: { lte: end || undefined },
-            endsAt: { gte: start },
-          },
-        ],
+        OR: conditions
       },
     });
 
     if (overlapping) {
-      throw new BadRequestException('An active discount already exists for this time range');
+      throw new BadRequestException('An active or scheduled discount already conflicts with this time range');
     }
 
-    return this.prisma.discount.create({ 
+    const created = await this.prisma.discount.create({ 
       data: {
-        ...dto,
+        productId: dto.productId,
+        value: dto.value,
+        type: dto.type,
         startsAt: start,
         endsAt: end
-      } 
+      },
+      include: {
+        product: { select: { id: true, name: true, price: true } }
+      }
     });
+
+    return this.mapDiscountStatus(created);
   }
 
   async update(id: number, dto: UpdateDiscountDto) {
     const discount = await this.prisma.discount.findUnique({ where: { id } });
     if (!discount) throw new NotFoundException('Discount not found');
 
-    return this.prisma.discount.update({
+    const updated = await this.prisma.discount.update({
       where: { id },
       data: {
-        ...dto,
+        value: dto.value,
+        type: dto.type,
         startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
-        endsAt: dto.endsAt ? new Date(dto.endsAt) : undefined,
+        endsAt: dto.endsAt !== undefined ? (dto.endsAt ? new Date(dto.endsAt) : null) : undefined,
       },
+      include: {
+        product: { select: { id: true, name: true, price: true } }
+      }
     });
+
+    return this.mapDiscountStatus(updated);
   }
 
   async remove(id: number) {
     const discount = await this.prisma.discount.findUnique({ where: { id } });
     if (!discount) throw new NotFoundException('Discount not found');
 
-    return this.prisma.discount.delete({ where: { id } });
+    await this.prisma.discount.delete({ where: { id } });
+    return { message: 'Discount promotion terminated successfully' };
   }
 
   async findAll() {
-    return this.prisma.discount.findMany({
+    const discounts = await this.prisma.discount.findMany({
       include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true
-          }
-        }
+        product: { select: { id: true, name: true, price: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    return discounts.map(d => this.mapDiscountStatus(d));
   }
 
   async findOne(id: number) {
@@ -90,12 +116,12 @@ export class DiscountService {
       include: { product: true }
     });
     if (!discount) throw new NotFoundException('Discount not found');
-    return discount;
+    return this.mapDiscountStatus(discount);
   }
 
   async getActiveDiscounts() {
     const now = new Date();
-    return this.prisma.discount.findMany({
+    const active = await this.prisma.discount.findMany({
       where: {
         startsAt: { lte: now },
         OR: [
@@ -104,14 +130,10 @@ export class DiscountService {
         ]
       },
       include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true
-          }
-        }
+        product: { select: { id: true, name: true, price: true } }
       }
     });
+
+    return active.map(d => this.mapDiscountStatus(d));
   }
 }

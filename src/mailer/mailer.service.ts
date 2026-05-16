@@ -214,4 +214,18 @@ export class MailerService {
       console.error('Failed to send invoice email:', error);
     }
   }
+  async sendGuestBulkNotification(email: string, subject: string, message: string) {
+    const html = await this.compileTemplate('bulk-announcement-guest', {
+      message,
+      email,
+      appUrl: process.env.APP_URL,
+    });
+
+    return this.transporter.sendMail({
+      from: `"Bamboo Shop" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: subject,
+      html,
+    });
+  }
 }

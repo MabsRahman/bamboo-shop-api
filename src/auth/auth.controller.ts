@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, Res, UnauthorizedException, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Res, UnauthorizedException, UseGuards, Req, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayload } from 'src/common/types/jwt-payload.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './guards/roles.decorator';
+import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
 
 export interface RequestWithUser extends Request {
   user: JwtPayload;
@@ -151,5 +152,54 @@ export class AuthController {
   ) {
     return this.authService.registerAdmin(name, email, password, role);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1)
+  @Get('admin/list')
+  async getAdminsList() {
+    return this.authService.getAllAdmins();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1)
+  @Post('admin/toggle-status')
+  async toggleStatus(@Body('id') id: number) {
+    return this.authService.toggleAdminStatus(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1)
+  @Post('admin/remove')
+  async removeAdminProfile(@Body('id') id: number) {
+    return this.authService.removeAdmin(id);
+  }
   
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
+  @Get('admin/me')
+  async getAdminProfile(@Req() req: any) {
+    const adminId = req.user.sub || req.user.id;
+    return this.authService.getAdminProfile(adminId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
+  @Patch('admin/profile-update')
+  async updateAdminProfile(
+    @Req() req: any, 
+    @Body() dto: UpdateAdminProfileDto
+  ) {
+    const adminId = req.user.sub || req.user.id;
+    return this.authService.updateAdminProfile(adminId, dto.name, dto.email);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(1, 2)
+  @Patch('admin/password-update')
+  async changeAdminPassword(@Req() req: any, @Body() dto: any) {
+    const adminId = req.user.sub || req.user.id;
+    return this.authService.changeAdminPassword(adminId, dto);
+  }
+
+
 }
