@@ -270,6 +270,7 @@ model PaymentTransaction {
   provider      PaymentMethod
   amount        Float
   status        String
+  gatewayUrl     String?
   transactionId String?       @unique
   createdAt     DateTime      @default(now())
   order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -427,6 +428,7 @@ enum PaymentMethod {
   NAGAD
   VISA
   MASTERCARD
+  MOBILE_BANKING
 }
 
 enum ReturnStatus {

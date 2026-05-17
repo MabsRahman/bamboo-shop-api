@@ -1,58 +1,22 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Controller, Post, Body } from '@nestjs/common';
+import { PaymentService } from './payment.service';
 
-@Controller('payments')
+@Controller('payment')
 export class PaymentController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly paymentService: PaymentService) {}
 
-  @Post('bkash/callback')
-  async handleBkashCallback(@Body() body: any) {
-    const { paymentID, status } = body;
-
-    const transaction = await this.prisma.paymentTransaction.findUnique({
-      where: { transactionId: paymentID },
-    });
-
-    if (!transaction) throw new BadRequestException('Transaction not found');
-
-    await this.prisma.paymentTransaction.update({
-      where: { transactionId: paymentID },
-      data: { status },
-    });
-
-    if (status === 'success') {
-      await this.prisma.order.update({
-        where: { id: transaction.orderId },
-        data: { status: 'paid' },
-      });
-    }
-
-    return { ok: true };
+  @Post('create')
+  create(@Body() body: any) {
+    return this.paymentService.createPayment(body);
   }
 
-  @Post('nagad/callback')
-  async handleNagadCallback(@Body() body: any) {
-    const { paymentID, status } = body;
-
-    const transaction = await this.prisma.paymentTransaction.findUnique({
-      where: { transactionId: paymentID },
-    });
-
-    if (!transaction) throw new BadRequestException('Transaction not found');
-
-    await this.prisma.paymentTransaction.update({
-      where: { transactionId: paymentID },
-      data: { status },
-    });
-
-    if (status === 'success') {
-      await this.prisma.order.update({
-        where: { id: transaction.orderId },
-        data: { status: 'paid' },
-      });
-    }
-
-    return { ok: true };
+  @Post('verify')
+  verify(@Body() body: { transactionId: string; orderId: number }) {
+    return this.paymentService.verifyPayment(body.transactionId, body.orderId);
   }
-  
+
+  @Post('webhook')
+  async webhook(@Body() payload: any) {
+    return this.paymentService.handleWebhook(payload);
+  }
 }

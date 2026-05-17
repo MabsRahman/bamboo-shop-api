@@ -2,32 +2,28 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Coupon, PaymentMethod } from '@prisma/client';
-import { BkashService } from '../payment/payment-service/bkash.service';
-import { NagadService } from '../payment/payment-service/nagad.service';
 import { MailerService } from '../mailer/mailer.service';
 import PDFDocument from 'pdfkit';
 import { join } from 'path/win32';
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { timestamp } from 'rxjs/internal/operators/timestamp';
+import { PaymentService } from '../payment/payment.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     private prisma: PrismaService,
-    private bkashService: BkashService,
-    private nagadService: NagadService,
+    private paymentService: PaymentService,
     private mailerService: MailerService,
   ) {}
 
   
+  
   async createOrder(userId: number, dto: CreateOrderDto) {
-    // 1. Check if the user has any profile address recorded yet
     const userAddresses = await this.prisma.address.findMany({
       where: { userId },
     });
-    
-    // If they have absolutely zero addresses saved on their account profile,
-    // let's automatically save this checkout address as their default profile address for next time.
+
     if (!userAddresses || userAddresses.length === 0) {
       await this.prisma.address.create({
         data: {
@@ -37,12 +33,12 @@ export class OrderService {
           city: dto.city,
           postalCode: dto.postalCode,
           isDefault: true,
-        }
+        },
       });
     }
 
-    // 2. Fetch products and check stock limits
-    const productIds = dto.cartItems.map(item => item.productId);
+    const productIds = dto.cartItems.map((item) => item.productId);
+
     const products = await this.prisma.product.findMany({
       where: { id: { in: productIds } },
       include: {
@@ -55,37 +51,47 @@ export class OrderService {
         },
       },
     });
-    
+
     if (products.length !== dto.cartItems.length) {
       throw new BadRequestException('Some products are invalid');
     }
 
     let subtotalAmount = 0;
-    const orderItemsData = dto.cartItems.map(item => {
-      const product = products.find(p => p.id === item.productId);
-      if (!product) throw new BadRequestException(`Product with ID ${item.productId} not found`);
-      if (product.stock < item.quantity)
-        throw new BadRequestException(`Insufficient stock for product: ${product.name}`);
-      
-      let activePrice = product.price;
-      const activeDiscount = product.discounts?.[0];
 
-      if (activeDiscount) {
-        if (activeDiscount.type === 'percentage') {
-          activePrice = product.price * (1 - activeDiscount.value / 100);
-        } else if (activeDiscount.type === 'fixed') {
-          activePrice = Math.max(0, product.price - activeDiscount.value);
+    const orderItemsData = dto.cartItems.map((item) => {
+      const product = products.find((p) => p.id === item.productId);
+
+      if (!product) {
+        throw new BadRequestException(`Product not found`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(`Insufficient stock for ${product.name}`);
+      }
+
+      let activePrice = product.price;
+      const discount = product.discounts?.[0];
+
+      if (discount) {
+        if (discount.type === 'percentage') {
+          activePrice = product.price * (1 - discount.value / 100);
+        } else {
+          activePrice = Math.max(0, product.price - discount.value);
         }
         activePrice = Math.round(activePrice * 100) / 100;
       }
-      
+
       const subtotal = activePrice * item.quantity;
       subtotalAmount += subtotal;
 
-      return { productId: item.productId, quantity: item.quantity, price: activePrice, subtotal };
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        price: activePrice,
+        subtotal,
+      };
     });
 
-    // 3. Process Coupon Logic
     let discountTotal = 0;
     let appliedCoupon: any = null;
 
@@ -95,35 +101,23 @@ export class OrderService {
         include: { couponUsers: true, couponProducts: true },
       });
 
-      if (!appliedCoupon) throw new BadRequestException('Invalid coupon code');
+      if (!appliedCoupon) throw new BadRequestException('Invalid coupon');
 
       const now = new Date();
+
       if (appliedCoupon.startsAt && appliedCoupon.startsAt > now)
-        throw new BadRequestException('Coupon not active yet');
+        throw new BadRequestException('Coupon not active');
+
       if (appliedCoupon.endsAt && appliedCoupon.endsAt < now)
         throw new BadRequestException('Coupon expired');
+
       if (appliedCoupon.usageLimit && appliedCoupon.usedCount >= appliedCoupon.usageLimit)
-        throw new BadRequestException('Coupon usage limit reached');
+        throw new BadRequestException('Coupon limit reached');
 
-      if (appliedCoupon.couponUsers?.length > 0) {
-        const userCoupon = appliedCoupon.couponUsers.find(cu => cu.userId === userId);
-        if (!userCoupon) throw new BadRequestException('Coupon not assigned to this user');
-      }
-
-      if (appliedCoupon.productId) {
-        const isInCart = dto.cartItems.some(item => item.productId === appliedCoupon?.productId);
-        if (!isInCart) throw new BadRequestException('Coupon not applicable for products in cart');
-      }
-
-      if (appliedCoupon.couponProducts?.length > 0) {
-        const validProductIds = appliedCoupon.couponProducts.map(cp => cp.productId);
-        const hasValidProduct = dto.cartItems.some(item => validProductIds.includes(item.productId));
-        if (!hasValidProduct) throw new BadRequestException('Coupon not applicable for products in cart');
-      }
-
-      const rawDiscount = appliedCoupon.type === 'percentage'
-        ? subtotalAmount * (appliedCoupon.value / 100)
-        : appliedCoupon.value;
+      const rawDiscount =
+        appliedCoupon.type === 'percentage'
+          ? subtotalAmount * (appliedCoupon.value / 100)
+          : appliedCoupon.value;
 
       discountTotal = Math.round(rawDiscount * 100) / 100;
 
@@ -133,70 +127,95 @@ export class OrderService {
       });
     }
 
-    const baseItemsTotal = Math.round((subtotalAmount - discountTotal) * 100) / 100;
-    const incomingShippingCost = Number(dto.shippingCost || 200); 
-    const finalAmount = Math.round((baseItemsTotal + incomingShippingCost) * 100) / 100;
-    const roundedSubtotal = Math.round(subtotalAmount * 100) / 100;
+    const baseItemsTotal = subtotalAmount - discountTotal;
+    const shippingCost = Number(dto.shippingCost || 200);
+    const finalAmount = Math.round((baseItemsTotal + shippingCost) * 100) / 100;
 
-    // 4. Create the Order with the exact chosen Address Snapshot
     const order = await this.prisma.order.create({
       data: {
         userId,
-        totalAmount: roundedSubtotal,
-        discountTotal: discountTotal,
-        shippingCost: incomingShippingCost,
-        finalAmount: finalAmount,
+        totalAmount: Math.round(subtotalAmount * 100) / 100,
+        discountTotal,
+        shippingCost,
+        finalAmount,
         couponId: appliedCoupon?.id || null,
         paymentMethod: dto.paymentMethod,
-        items: { create: orderItemsData },
-        
-        // Added safe default fallback guards to prevent P2011 null constraint errors
+        items: {
+          create: orderItemsData,
+        },
         shippingName: dto.name || 'Customer',
-        shippingPhone: dto.phone || '01000000000',
-        shippingAddress: `${dto.houseno || ''}, ${dto.street || ''}, ${dto.city || ''} - ${dto.postalCode || ''}`.trim()
+        shippingPhone: dto.phone || '0000000000',
+        shippingAddress: `${dto.houseno}, ${dto.street}, ${dto.city} - ${dto.postalCode}`,
       },
-      include: { items: { include: { product: true } } },
+      include: {
+        items: true,
+      },
     });
-
-    // 5. Create Payment Transaction
-    let paymentTransactionData: any = {
-      orderId: order.id,
-      amount: finalAmount,
-      status: 'pending',
-      provider: dto.paymentMethod as any,
-      transactionId: null,
-    };
-
-    if (dto.paymentMethod === PaymentMethod.COD) {
-      paymentTransactionData.status = 'success';
-    } else if (dto.paymentMethod === PaymentMethod.BKASH) {
-      const bkashPayment = await this.bkashService.createPayment(order.id, finalAmount);
-      paymentTransactionData.transactionId = bkashPayment.paymentID;
-    } else if (dto.paymentMethod === PaymentMethod.NAGAD) {
-      const nagadPayment = await this.nagadService.createPayment(order.id, finalAmount);
-      paymentTransactionData.transactionId = nagadPayment.paymentID;
-    }
-
-    await this.prisma.paymentTransaction.create({ data: paymentTransactionData });
-
-    // 6. Update Product Stocks
-    for (const item of dto.cartItems) {
-      await this.prisma.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
-      });
-    }
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
     if (!user) throw new BadRequestException('User not found');
-    
-    // 7. Send the email with the snapshot shipping values
-    await this.mailerService.sendOrderConfirmationEmail(user.email, dto.name, order); 
 
-    return order;
+    let gatewayUrl: string | null = null;
+
+    const paymentTransactionData: any = {
+      orderId: order.id,
+      amount: finalAmount,
+      status: 'pending',
+      provider: dto.paymentMethod,
+      transactionId: null,
+      gatewayUrl: null,
+    };
+
+    if (dto.paymentMethod === PaymentMethod.COD) {
+      paymentTransactionData.status = 'success';
+      paymentTransactionData.transactionId = `COD-${order.id}`;
+    } else {
+      const payment = await this.paymentService.createPayment({
+        id: String(order.id),
+        amount: finalAmount,
+        name: dto.name,
+        email: user.email,
+      });
+
+      paymentTransactionData.transactionId =
+        payment?.transaction_id || payment?.trxId || null;
+
+      gatewayUrl =
+        payment?.payment_url || payment?.checkout_url || null;
+
+      paymentTransactionData.gatewayUrl = gatewayUrl;
+    }
+
+    await this.prisma.paymentTransaction.create({
+      data: paymentTransactionData,
+    });
+
+    if (dto.paymentMethod === PaymentMethod.COD) {
+      for (const item of dto.cartItems) {
+        await this.prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: { decrement: item.quantity },
+          },
+        });
+      }
+    }
+
+    if (dto.paymentMethod === PaymentMethod.COD) {
+      await this.mailerService.sendOrderConfirmationEmail(
+        user.email,
+        dto.name,
+        order,
+      );
+    }
+
+    return {
+      order,
+      gatewayUrl,
+    };
   }
 
 
